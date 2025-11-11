@@ -14,10 +14,13 @@ const App: React.FC = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orders, setOrders] = useState<FullOrderData[]>([]);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isServiceOpen, setIsServiceOpen] = useState(true);
 
   const handlePlaceOrderClick = useCallback(() => {
-    setView(AppView.FORM);
-  }, []);
+    if (isServiceOpen) {
+      setView(AppView.FORM);
+    }
+  }, [isServiceOpen]);
 
   const handleOrderSubmit = useCallback((data: OrderData, generatedOrderId: string) => {
     console.log('Order submitted:', data);
@@ -78,26 +81,30 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleToggleServiceStatus = useCallback(() => {
+    setIsServiceOpen(prev => !prev);
+  }, []);
+
   const renderView = () => {
     switch (view) {
       case AppView.HOME:
-        return <HomePage onPlaceOrderClick={handlePlaceOrderClick} />;
+        return <HomePage onPlaceOrderClick={handlePlaceOrderClick} isServiceOpen={isServiceOpen} />;
       case AppView.FORM:
         return <OrderForm onOrderSubmit={handleOrderSubmit} />;
       case AppView.CONFIRMATION:
         return <ConfirmationPage orderId={orderId} onStartNewOrder={handleStartNewOrder} onPaymentProofSubmit={handlePaymentProofSubmit} />;
       case AppView.ADMIN:
-        return isAdminAuthenticated ? <AdminPage orders={orders} onMarkAsProcessed={handleMarkAsProcessed} /> : <LoginPage onLogin={handleAdminLogin} />;
+        return isAdminAuthenticated ? <AdminPage orders={orders} onMarkAsProcessed={handleMarkAsProcessed} isServiceOpen={isServiceOpen} onToggleServiceStatus={handleToggleServiceStatus} /> : <LoginPage onLogin={handleAdminLogin} />;
       case AppView.LOGIN:
         return <LoginPage onLogin={handleAdminLogin} />;
       default:
-        return <HomePage onPlaceOrderClick={handlePlaceOrderClick} />;
+        return <HomePage onPlaceOrderClick={handlePlaceOrderClick} isServiceOpen={isServiceOpen} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-      <Header onGoHome={handleGoToHome} isAdminView={view === AppView.ADMIN} onLogout={handleAdminLogout} />
+      <Header onGoHome={handleGoToHome} isAdminView={view === AppView.ADMIN} onLogout={handleAdminLogout} isServiceOpen={isServiceOpen} />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         {renderView()}
       </main>

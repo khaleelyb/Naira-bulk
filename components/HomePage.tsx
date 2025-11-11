@@ -5,6 +5,7 @@ import { AliExpressIcon } from './icons/AliExpressIcon';
 
 interface HomePageProps {
   onPlaceOrderClick: () => void;
+  isServiceOpen: boolean;
 }
 
 const Step: React.FC<{ number: string; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
@@ -20,9 +21,16 @@ const Step: React.FC<{ number: string; title: string; children: React.ReactNode 
 );
 
 
-const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick }) => {
+const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick, isServiceOpen }) => {
   return (
     <div className="max-w-4xl mx-auto">
+      {!isServiceOpen && (
+        <div className="mb-8 bg-orange-100 border-l-4 border-orange-500 text-orange-800 p-4 rounded-md shadow" role="status">
+          <p className="font-bold">Temporarily Closed for New Orders</p>
+          <p>We're currently not accepting new orders. Please check back with us soon!</p>
+        </div>
+      )}
+      
       <section className="text-center bg-white p-8 rounded-xl shadow-lg">
         <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
           Shop on Temu & AliExpress from Nigeria
@@ -73,9 +81,10 @@ const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick }) => {
       <div id="order-form" className="mt-12 text-center">
         <button
           onClick={onPlaceOrderClick}
-          className="w-full md:w-auto bg-green-600 text-white font-bold text-xl px-12 py-4 rounded-lg shadow-lg hover:bg-green-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
+          disabled={!isServiceOpen}
+          className="w-full md:w-auto bg-green-600 text-white font-bold text-xl px-12 py-4 rounded-lg shadow-lg hover:bg-green-700 transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
-          Ready? Place Your Order Now
+          {isServiceOpen ? 'Ready? Place Your Order Now' : 'Currently Closed for Orders'}
         </button>
       </div>
     </div>

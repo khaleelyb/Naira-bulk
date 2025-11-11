@@ -6,9 +6,10 @@ interface HeaderProps {
     onGoHome?: () => void;
     isAdminView?: boolean;
     onLogout?: () => void;
+    isServiceOpen?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onGoHome, isAdminView, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ onGoHome, isAdminView, onLogout, isServiceOpen }) => {
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -21,7 +22,17 @@ const Header: React.FC<HeaderProps> = ({ onGoHome, isAdminView, onLogout }) => {
                 Logout
             </button>
         ) : (
-            <a href="#order-form" className="hidden sm:inline-block bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            <a
+                href="#order-form"
+                onClick={(e) => { if (!isServiceOpen) e.preventDefault(); }}
+                className={`hidden sm:inline-block text-white font-semibold px-4 py-2 rounded-lg transition-colors ${
+                    isServiceOpen
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-gray-400 cursor-not-allowed'
+                }`}
+                aria-disabled={!isServiceOpen}
+                tabIndex={!isServiceOpen ? -1 : undefined}
+            >
               Place Order
             </a>
         )}

@@ -133,9 +133,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
 interface AdminPageProps {
   orders: FullOrderData[];
   onMarkAsProcessed: (orderId: string) => void;
+  isServiceOpen: boolean;
+  onToggleServiceStatus: () => void;
 }
 
-const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed, isServiceOpen, onToggleServiceStatus }) => {
+  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
+
+  const openOrders = orders.filter(order => !order.isProcessed);
+  const closedOrders = orders.filter(order => order.isProcessed);
+
+  const ordersToShow = activeTab === 'open' ? openOrders : closedOrders;
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center md:text-left mb-8">
@@ -144,17 +153,95 @@ const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed }) => {
         </h2>
       </div>
 
+      <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Service Status</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold">
+              {isServiceOpen
+                ? <span className="text-green-700">Open for New Orders</span>
+                : <span className="text-red-700">Closed for New Orders</span>
+              }
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              When closed, users will not be able to start a new order.
+            </p>
+          </div>
+          <button
+            onClick={onToggleServiceStatus}
+            type="button"
+            role="switch"
+            aria-checked={isServiceOpen}
+            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+              isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                isServiceOpen ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {orders.length === 0 ? (
         <div className="text-center bg-white p-8 rounded-xl shadow-lg">
           <h3 className="text-xl font-semibold text-gray-800">No Orders Yet</h3>
           <p className="mt-2 text-gray-500">When users submit orders, they will appear here.</p>
         </div>
       ) : (
-        <div className="space-y-8">
-          <p className="text-gray-600 px-2">Displaying {orders.length} order(s), newest first.</p>
-          {orders.slice().reverse().map((order) => (
-            <OrderCard key={order.orderId} order={order} onMarkAsProcessed={onMarkAsProcessed} />
-          ))}
+        <div>
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-6">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('open')}
+                className={`${
+                  activeTab === 'open'
+                    ? 'border-green-600 text-green-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+              >
+                Open
+                <span className={`${
+                    activeTab === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                } ml-1 py-0.5 px-2.5 rounded-full text-xs font-medium`}>
+                    {openOrders.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab('closed')}
+                className={`${
+                  activeTab === 'closed'
+                    ? 'border-green-600 text-green-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+              >
+                Closed
+                <span className={`${
+                    activeTab === 'closed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                } ml-1 py-0.5 px-2.5 rounded-full text-xs font-medium`}>
+                    {closedOrders.length}
+                </span>
+              </button>
+            </nav>
+          </div>
+
+          {/* Orders List */}
+          {ordersToShow.length === 0 ? (
+            <div className="text-center bg-white p-8 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold text-gray-800">No {activeTab} orders.</h3>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <p className="text-gray-600 px-2">Displaying {ordersToShow.length} {activeTab} order(s), newest first.</p>
+              {ordersToShow.slice().reverse().map((order) => (
+                <OrderCard key={order.orderId} order={order} onMarkAsProcessed={onMarkAsProcessed} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
