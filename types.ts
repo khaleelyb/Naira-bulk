@@ -1,8 +1,10 @@
+
 export enum AppView {
   HOME,
   FORM,
   CONFIRMATION,
   ADMIN,
+  LOGIN,
 }
 
 export interface OrderData {
@@ -18,8 +20,10 @@ export interface OrderData {
 export interface FullOrderData extends OrderData {
   orderId: string;
   paymentProof?: File;
+  isProcessed?: boolean;
 }
 
+// Fix: Add missing CartAnalysisResult interface
 export interface CartAnalysisResult {
   totalPrice: string;
   items: string[];

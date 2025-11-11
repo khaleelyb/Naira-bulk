@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { AppView, OrderData, FullOrderData } from './types';
 import Header from './components/Header';
@@ -6,11 +7,13 @@ import OrderForm from './components/OrderForm';
 import ConfirmationPage from './components/ConfirmationPage';
 import Footer from './components/Footer';
 import AdminPage from './components/AdminPage';
+import LoginPage from './components/LoginPage';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.HOME);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orders, setOrders] = useState<FullOrderData[]>([]);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
 
   const handlePlaceOrderClick = useCallback(() => {
     setView(AppView.FORM);
@@ -18,7 +21,7 @@ const App: React.FC = () => {
 
   const handleOrderSubmit = useCallback((data: OrderData, generatedOrderId: string) => {
     console.log('Order submitted:', data);
-    const newOrder: FullOrderData = { ...data, orderId: generatedOrderId };
+    const newOrder: FullOrderData = { ...data, orderId: generatedOrderId, isProcessed: false };
     setOrders(prevOrders => [...prevOrders, newOrder]);
     setOrderId(generatedOrderId);
     setView(AppView.CONFIRMATION);
@@ -40,12 +43,37 @@ const App: React.FC = () => {
     console.log(`Payment proof for order ${orderIdToUpdate} submitted.`);
   }, []);
 
+  const handleMarkAsProcessed = useCallback((orderIdToUpdate: string) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.orderId === orderIdToUpdate ? { ...order, isProcessed: true } : order
+      )
+    );
+    console.log(`Order ${orderIdToUpdate} marked as processed.`);
+  }, []);
+
   const handleGoToAdmin = useCallback(() => {
-    setView(AppView.ADMIN);
+    setView(isAdminAuthenticated ? AppView.ADMIN : AppView.LOGIN);
+    window.scrollTo(0, 0);
+  }, [isAdminAuthenticated]);
+
+  const handleGoToHome = useCallback(() => {
+    setView(AppView.HOME);
     window.scrollTo(0, 0);
   }, []);
 
-  const handleGoToHome = useCallback(() => {
+  const handleAdminLogin = useCallback((username, password) => {
+    if (username === 'admin123' && password === '123234345') {
+      setIsAdminAuthenticated(true);
+      setView(AppView.ADMIN);
+      window.scrollTo(0, 0);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const handleAdminLogout = useCallback(() => {
+    setIsAdminAuthenticated(false);
     setView(AppView.HOME);
     window.scrollTo(0, 0);
   }, []);
@@ -59,7 +87,9 @@ const App: React.FC = () => {
       case AppView.CONFIRMATION:
         return <ConfirmationPage orderId={orderId} onStartNewOrder={handleStartNewOrder} onPaymentProofSubmit={handlePaymentProofSubmit} />;
       case AppView.ADMIN:
-        return <AdminPage orders={orders} />;
+        return isAdminAuthenticated ? <AdminPage orders={orders} onMarkAsProcessed={handleMarkAsProcessed} /> : <LoginPage onLogin={handleAdminLogin} />;
+      case AppView.LOGIN:
+        return <LoginPage onLogin={handleAdminLogin} />;
       default:
         return <HomePage onPlaceOrderClick={handlePlaceOrderClick} />;
     }
@@ -67,7 +97,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-      <Header onGoHome={handleGoToHome} isAdminView={view === AppView.ADMIN} />
+      <Header onGoHome={handleGoToHome} isAdminView={view === AppView.ADMIN} onLogout={handleAdminLogout} />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         {renderView()}
       </main>

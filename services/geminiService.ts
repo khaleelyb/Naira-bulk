@@ -2,15 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CartAnalysisResult } from '../types';
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  // In a real app, you might want to handle this more gracefully.
-  // For this environment, we assume it's always present.
-  console.warn("API_KEY environment variable not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// Fix: Per coding guidelines, initialize directly and assume API_KEY is present.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
 // Helper function to convert a file to a base64 string
 const fileToBase64 = (file: File): Promise<string> => {

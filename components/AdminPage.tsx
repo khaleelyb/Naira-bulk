@@ -1,11 +1,26 @@
+
 import React, { useEffect, useState } from 'react';
 import { FullOrderData } from '../types';
 
+const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg 
+      {...props} 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor" 
+      strokeWidth="2"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
 interface OrderCardProps {
     order: FullOrderData;
+    onMarkAsProcessed: (orderId: string) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
     const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
     const [proofUrl, setProofUrl] = useState<string | null>(null);
 
@@ -17,6 +32,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         if (order.paymentProof) {
             pUrl = URL.createObjectURL(order.paymentProof);
             setProofUrl(pUrl);
+        } else {
+            setProofUrl(null); // Ensure proofUrl is cleared if paymentProof is removed/not present
         }
 
         return () => {
@@ -90,6 +107,24 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
                     )}
                 </div>
             </div>
+
+            <div className="border-t mt-4 pt-4 flex justify-end items-center">
+                {order.isProcessed ? (
+                    <div className="flex items-center gap-2 text-green-700 bg-green-100 font-semibold px-4 py-2 rounded-lg">
+                        <CheckCircleIcon className="h-6 w-6" />
+                        <span>Processed</span>
+                    </div>
+                ) : (
+                    <button 
+                        onClick={() => onMarkAsProcessed(order.orderId)}
+                        className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={!order.paymentProof}
+                        title={!order.paymentProof ? "Cannot process until payment proof is submitted" : "Mark as processed"}
+                    >
+                        Mark as Processed
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
@@ -97,9 +132,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
 
 interface AdminPageProps {
   orders: FullOrderData[];
+  onMarkAsProcessed: (orderId: string) => void;
 }
 
-const AdminPage: React.FC<AdminPageProps> = ({ orders }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed }) => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="text-center md:text-left mb-8">
@@ -117,7 +153,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ orders }) => {
         <div className="space-y-8">
           <p className="text-gray-600 px-2">Displaying {orders.length} order(s), newest first.</p>
           {orders.slice().reverse().map((order) => (
-            <OrderCard key={order.orderId} order={order} />
+            <OrderCard key={order.orderId} order={order} onMarkAsProcessed={onMarkAsProcessed} />
           ))}
         </div>
       )}

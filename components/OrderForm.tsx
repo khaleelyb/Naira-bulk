@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from 'react';
 import { OrderData } from '../types';
-import { analyzeCartScreenshot } from '../services/geminiService';
 import { UploadIcon } from './icons/UploadIcon';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 
@@ -47,7 +46,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!screenshot) {
       setError('Please upload a screenshot of your cart.');
@@ -57,22 +56,13 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      // We call Gemini to demonstrate the capability, but we don't block the user
-      // or use the response in the user-facing form flow. In a real app, this
-      // would be sent to an admin panel for verification.
-      const analysis = await analyzeCartScreenshot(screenshot);
-      console.log("Gemini Cart Analysis:", analysis);
-      
+    // Simulate a submission delay for better UX, as if talking to a server.
+    setTimeout(() => {
       const orderId = `NB-${Date.now()}`;
       const fullOrderData: OrderData = { ...formData, screenshot };
       onOrderSubmit(fullOrderData, orderId);
-
-    } catch (apiError: any) {
-      setError(apiError.message || "An error occurred during submission. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+      // No need to call setIsLoading(false) because the component will unmount on success.
+    }, 1000);
   };
 
   return (
