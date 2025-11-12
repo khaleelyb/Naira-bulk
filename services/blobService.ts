@@ -2,7 +2,7 @@ import { Order, OrderFormData } from '../types';
 
 // WARNING: This approach is insecure for production!
 const BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_D22iusycMNJAXLVz_hyoGM0AmyFt3czH5rkywSlHLC55yv8";
-const FOLDER_PREFIX = 'order-bulk-blob';
+const FOLDER_PREFIX = 'nairabulk_orders';
 const CONFIG_PATH = `${FOLDER_PREFIX}/service-status.json`;
 
 interface VercelBlobResult {
