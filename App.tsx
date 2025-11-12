@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AppView, OrderFormData } from './types';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
@@ -7,13 +7,20 @@ import ConfirmationPage from './components/ConfirmationPage';
 import Footer from './components/Footer';
 import AdminPage from './components/AdminPage';
 import LoginPage from './components/LoginPage';
-import { createOrder } from './services/blobService';
+import { createOrder, getServiceStatus, setServiceStatus } from './services/blobService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.HOME);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isServiceOpen, setIsServiceOpen] = useState(true);
+
+  useEffect(() => {
+    // Fetch the authoritative service status from the blob store on load.
+    getServiceStatus().then(status => {
+      setIsServiceOpen(status);
+    });
+  }, []);
 
   const handlePlaceOrderClick = useCallback(() => {
     if (isServiceOpen) {
@@ -61,11 +68,17 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleToggleServiceStatus = useCallback(() => {
-    // In a real app, this status should also be stored persistently.
-    // For now, it remains as local state.
-    setIsServiceOpen(prev => !prev);
-  }, []);
+  const handleToggleServiceStatus = useCallback(async () => {
+    const newStatus = !isServiceOpen;
+    setIsServiceOpen(newStatus); // Optimistic UI update for responsiveness
+    try {
+      await setServiceStatus(newStatus);
+    } catch (error) {
+      console.error("Failed to persist service status:", error);
+      alert("Error: Could not update service status. Reverting change.");
+      setIsServiceOpen(!newStatus); // Revert on error
+    }
+  }, [isServiceOpen]);
 
   const renderView = () => {
     switch (view) {

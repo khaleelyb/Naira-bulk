@@ -11,14 +11,10 @@ import { Order, OrderFormData } from '../types';
  * For the purpose of this self-contained example, we are using the token on the client,
  * but this is NOT recommended for production.
  */
-const BLOB_READ_WRITE_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
+const BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_D22iusycMNJAXLVz_hyoGM0AmyFt3czH5rkywSlHLC55yv8";
 const BLOB_API_URL = 'https://blob.vercel-storage.com';
 const FOLDER_PREFIX = 'nairabulk_orders'; // Use a distinct folder
-
-if (!BLOB_READ_WRITE_TOKEN) {
-  // Disable functionality and log an error to the console.
-  console.error("Missing Vercel Blob API token. Please set BLOB_READ_WRITE_TOKEN environment variable. Data operations will fail.");
-}
+const CONFIG_PATH = `${FOLDER_PREFIX}/service-status.json`;
 
 /**
  * Represents the response from a Vercel Blob upload operation.
@@ -39,6 +35,10 @@ interface VercelBlobListResult {
     cursor?: string;
 }
 
+interface ServiceStatus {
+    isServiceOpen: boolean;
+}
+
 
 /**
  * Uploads a file or JSON data to Vercel Blob storage.
@@ -54,6 +54,8 @@ async function put(pathname: string, body: File | string): Promise<VercelBlobRes
     headers: {
       'Authorization': `Bearer ${BLOB_READ_WRITE_TOKEN}`,
       'x-vercel-blob-client': 'NairaBulk-App-0.1',
+      // Allow overwriting for config files and order updates
+      'x-add-or-replace': '1',
     },
     body,
   });
@@ -72,7 +74,7 @@ async function put(pathname: string, body: File | string): Promise<VercelBlobRes
  */
 async function get<T>(url: string): Promise<T> {
     // Public blob URLs can be fetched directly without auth
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' }); // Disable cache for status checks
     if (!response.ok) {
         throw new Error(`Failed to fetch from blob storage: ${await response.text()}`);
     }
@@ -99,6 +101,47 @@ async function list(): Promise<VercelBlobListResult> {
     }
     return response.json();
 }
+
+/**
+ * Helper to find a specific blob's metadata by its exact pathname.
+ * @param pathname - The pathname of the blob to find.
+ * @returns The blob metadata or null if not found.
+ */
+async function findBlobByPathname(pathname: string): Promise<VercelBlobResult | null> {
+    const listResult = await list();
+    return listResult.blobs.find(b => b.pathname === pathname) || null;
+}
+
+/**
+ * Retrieves the current service status from the blob store.
+ * Defaults to 'open' if the status file doesn't exist.
+ * @returns A boolean indicating if the service is open.
+ */
+export async function getServiceStatus(): Promise<boolean> {
+    try {
+        const statusBlob = await findBlobByPathname(CONFIG_PATH);
+        if (statusBlob) {
+            const statusData = await get<ServiceStatus>(statusBlob.url);
+            return statusData.isServiceOpen;
+        }
+        // If file doesn't exist, service is open by default. Create the file.
+        await setServiceStatus(true);
+        return true;
+    } catch (error) {
+        console.error("Could not fetch service status, defaulting to open:", error);
+        return true; // Fail-safe: default to open on any error
+    }
+}
+
+/**
+ * Sets the service's open/closed status in the blob store.
+ * @param isServiceOpen - The new status to set.
+ */
+export async function setServiceStatus(isServiceOpen: boolean): Promise<void> {
+    const statusData: ServiceStatus = { isServiceOpen };
+    await put(CONFIG_PATH, JSON.stringify(statusData));
+}
+
 
 /**
  * Creates a new order by uploading the screenshot and order data.
@@ -135,9 +178,8 @@ export async function createOrder(data: OrderFormData): Promise<string> {
  * @returns The blob metadata for the order's JSON file.
  */
 async function findOrderBlob(orderId: string): Promise<VercelBlobResult> {
-    const listResult = await list();
     const orderPathname = `${FOLDER_PREFIX}/${orderId}.json`;
-    const orderBlob = listResult.blobs.find(b => b.pathname === orderPathname);
+    const orderBlob = await findBlobByPathname(orderPathname);
     if (!orderBlob) {
         throw new Error(`Order with ID ${orderId} not found.`);
     }
@@ -183,7 +225,7 @@ export async function markOrderAsProcessed(orderId: string): Promise<void> {
  */
 export async function getAllOrders(): Promise<Order[]> {
     const listResult = await list();
-    const orderJsonBlobs = listResult.blobs.filter(blob => blob.pathname.endsWith('.json'));
+    const orderJsonBlobs = listResult.blobs.filter(blob => blob.pathname.endsWith('.json') && blob.pathname !== CONFIG_PATH);
 
     if (orderJsonBlobs.length === 0) {
         return [];

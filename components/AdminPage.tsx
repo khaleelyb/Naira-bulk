@@ -110,7 +110,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
 
 interface AdminPageProps {
   isServiceOpen: boolean;
-  onToggleServiceStatus: () => void;
+  onToggleServiceStatus: () => Promise<void>;
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceStatus }) => {
@@ -118,6 +118,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
@@ -144,11 +145,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
       await markOrderAsProcessed(orderId);
       // Refetch to get the latest status
       await fetchOrders();
-    } catch (err) {
+    } catch (err)
+ {
       console.error(`Failed to mark order ${orderId} as processed:`, err);
       alert(`Error: ${err instanceof Error ? err.message : "Could not process order."}`);
     }
   };
+
+  const handleToggle = useCallback(async () => {
+    setIsTogglingStatus(true);
+    try {
+      await onToggleServiceStatus();
+    } finally {
+      setIsTogglingStatus(false);
+    }
+  }, [onToggleServiceStatus]);
 
 
   const openOrders = orders.filter(order => !order.isProcessed);
@@ -260,11 +271,12 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
             </p>
           </div>
           <button
-            onClick={onToggleServiceStatus}
+            onClick={handleToggle}
             type="button"
             role="switch"
             aria-checked={isServiceOpen}
-            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+            disabled={isTogglingStatus}
+            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-75 disabled:cursor-wait ${
               isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
             }`}
           >
