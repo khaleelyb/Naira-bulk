@@ -1,123 +1,27 @@
 import { Order, OrderFormData } from '../types';
 
-// WARNING: This approach is insecure for production!
-const BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_D22iusycMNJAXLVz_hyoGM0AmyFt3czH5rkywSlHLC55yv8";
-const FOLDER_PREFIX = 'nairabulk_orders';
-const CONFIG_PATH = `${FOLDER_PREFIX}/service-status.json`;
-
-interface VercelBlobResult {
-  url: string;
-  pathname: string;
-  contentType: string;
-  contentDisposition: string;
-}
-
-interface VercelBlobListResult {
-  blobs: VercelBlobResult[];
-  hasMore: boolean;
-  cursor?: string;
-}
+/**
+ * Storage service using Claude's built-in persistent storage API.
+ * This works in Claude artifacts without any external dependencies.
+ */
 
 interface ServiceStatus {
   isServiceOpen: boolean;
 }
 
 /**
- * Upload file or data to Vercel Blob
+ * Convert File to base64 string for storage
  */
-async function put(pathname: string, body: File | string | Blob): Promise<VercelBlobResult> {
-  if (!BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Vercel Blob API token is not configured.");
-  }
-  
-  try {
-    const url = `https://blob.vercel-storage.com/${pathname}?token=${BLOB_READ_WRITE_TOKEN}`;
-    
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'x-vercel-blob-client': 'NairaBulk-App-0.1',
-        'x-add-or-replace': '1',
-      },
-      body,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Blob PUT Error:', errorText);
-      throw new Error(`Upload failed (${response.status}): ${errorText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Upload error:', error);
-    throw new Error(`Failed to upload: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-/**
- * Fetch and parse JSON from a public URL
- */
-async function get<T>(url: string): Promise<T> {
-  try {
-    const response = await fetch(url, { 
-      cache: 'no-store',
-      mode: 'cors' 
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Fetch failed (${response.status})`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw new Error(`Failed to fetch: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-/**
- * List all blobs with the orders prefix
- */
-async function list(): Promise<VercelBlobListResult> {
-  if (!BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Vercel Blob API token is not configured.");
-  }
-
-  try {
-    const url = `https://blob.vercel-storage.com?prefix=${FOLDER_PREFIX}/&limit=1000`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${BLOB_READ_WRITE_TOKEN}`,
-      },
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Blob LIST Error:', errorText);
-      throw new Error(`List failed (${response.status}): ${errorText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('List error:', error);
-    throw new Error(`Failed to list: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-/**
- * Find a blob by its exact pathname
- */
-async function findBlobByPathname(pathname: string): Promise<VercelBlobResult | null> {
-  try {
-    const listResult = await list();
-    return listResult.blobs.find(b => b.pathname === pathname) || null;
-  } catch (error) {
-    console.error('Error finding blob:', error);
-    return null;
-  }
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 /**
@@ -125,17 +29,16 @@ async function findBlobByPathname(pathname: string): Promise<VercelBlobResult | 
  */
 export async function getServiceStatus(): Promise<boolean> {
   try {
-    const statusBlob = await findBlobByPathname(CONFIG_PATH);
-    if (statusBlob) {
-      const statusData = await get<ServiceStatus>(statusBlob.url);
+    const result = await window.storage.get('service-status', true);
+    if (result && result.value) {
+      const statusData: ServiceStatus = JSON.parse(result.value);
       return statusData.isServiceOpen;
     }
-    // Default to open if file doesn't exist
-    await setServiceStatus(true);
+    // Default to open if not set
     return true;
   } catch (error) {
-    console.error("Could not fetch service status:", error);
-    return true; // Fail-safe: default to open
+    console.log('Service status not found, defaulting to open');
+    return true; // Default to open
   }
 }
 
@@ -144,8 +47,7 @@ export async function getServiceStatus(): Promise<boolean> {
  */
 export async function setServiceStatus(isServiceOpen: boolean): Promise<void> {
   const statusData: ServiceStatus = { isServiceOpen };
-  const blob = new Blob([JSON.stringify(statusData)], { type: 'application/json' });
-  await put(CONFIG_PATH, blob);
+  await window.storage.set('service-status', JSON.stringify(statusData), true);
 }
 
 /**
@@ -155,12 +57,10 @@ export async function createOrder(data: OrderFormData): Promise<string> {
   const orderId = `NB-${Date.now()}`;
   
   try {
-    // 1. Upload screenshot
-    const screenshotExtension = data.screenshot.name.split('.').pop() || 'png';
-    const screenshotPath = `${FOLDER_PREFIX}/${orderId}-screenshot.${screenshotExtension}`;
-    const screenshotResult = await put(screenshotPath, data.screenshot);
+    // Convert screenshot to base64
+    const screenshotBase64 = await fileToBase64(data.screenshot);
 
-    // 2. Create order object
+    // Create order object
     const order: Order = {
       orderId,
       createdAt: Date.now(),
@@ -170,14 +70,12 @@ export async function createOrder(data: OrderFormData): Promise<string> {
       address: data.address,
       store: data.store,
       notes: data.notes,
-      screenshot: screenshotResult.url,
+      screenshot: screenshotBase64,
       isProcessed: false,
     };
 
-    // 3. Upload order JSON
-    const orderPath = `${FOLDER_PREFIX}/${orderId}.json`;
-    const orderBlob = new Blob([JSON.stringify(order)], { type: 'application/json' });
-    await put(orderPath, orderBlob);
+    // Store order (using shared storage so admin can see it)
+    await window.storage.set(`order:${orderId}`, JSON.stringify(order), true);
 
     return orderId;
   } catch (error) {
@@ -187,39 +85,25 @@ export async function createOrder(data: OrderFormData): Promise<string> {
 }
 
 /**
- * Find order blob by ID
- */
-async function findOrderBlob(orderId: string): Promise<VercelBlobResult> {
-  const orderPathname = `${FOLDER_PREFIX}/${orderId}.json`;
-  const orderBlob = await findBlobByPathname(orderPathname);
-  
-  if (!orderBlob) {
-    throw new Error(`Order ${orderId} not found`);
-  }
-  
-  return orderBlob;
-}
-
-/**
  * Add payment proof to an order
  */
 export async function addPaymentProof(orderId: string, proofFile: File): Promise<void> {
   try {
-    // 1. Get existing order
-    const orderBlob = await findOrderBlob(orderId);
-    const order = await get<Order>(orderBlob.url);
-
-    // 2. Upload payment proof
-    const proofExtension = proofFile.name.split('.').pop() || 'png';
-    const proofPath = `${FOLDER_PREFIX}/${orderId}-proof.${proofExtension}`;
-    const proofResult = await put(proofPath, proofFile);
+    // Get existing order
+    const result = await window.storage.get(`order:${orderId}`, true);
     
-    // 3. Update order with proof URL
-    order.paymentProof = proofResult.url;
+    if (!result || !result.value) {
+      throw new Error('Order not found');
+    }
 
-    // 4. Save updated order
-    const updatedOrderBlob = new Blob([JSON.stringify(order)], { type: 'application/json' });
-    await put(orderBlob.pathname, updatedOrderBlob);
+    const order: Order = JSON.parse(result.value);
+
+    // Convert proof to base64
+    const proofBase64 = await fileToBase64(proofFile);
+    order.paymentProof = proofBase64;
+
+    // Save updated order
+    await window.storage.set(`order:${orderId}`, JSON.stringify(order), true);
   } catch (error) {
     console.error('Error adding payment proof:', error);
     throw new Error(`Failed to add payment proof: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -231,12 +115,16 @@ export async function addPaymentProof(orderId: string, proofFile: File): Promise
  */
 export async function markOrderAsProcessed(orderId: string): Promise<void> {
   try {
-    const orderBlob = await findOrderBlob(orderId);
-    const order = await get<Order>(orderBlob.url);
+    const result = await window.storage.get(`order:${orderId}`, true);
+    
+    if (!result || !result.value) {
+      throw new Error('Order not found');
+    }
+
+    const order: Order = JSON.parse(result.value);
     order.isProcessed = true;
     
-    const updatedOrderBlob = new Blob([JSON.stringify(order)], { type: 'application/json' });
-    await put(orderBlob.pathname, updatedOrderBlob);
+    await window.storage.set(`order:${orderId}`, JSON.stringify(order), true);
   } catch (error) {
     console.error('Error marking order as processed:', error);
     throw new Error(`Failed to mark order as processed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -248,18 +136,28 @@ export async function markOrderAsProcessed(orderId: string): Promise<void> {
  */
 export async function getAllOrders(): Promise<Order[]> {
   try {
-    const listResult = await list();
-    const orderJsonBlobs = listResult.blobs.filter(
-      blob => blob.pathname.endsWith('.json') && blob.pathname !== CONFIG_PATH
-    );
-
-    if (orderJsonBlobs.length === 0) {
+    // List all order keys
+    const listResult = await window.storage.list('order:', true);
+    
+    if (!listResult || !listResult.keys || listResult.keys.length === 0) {
       return [];
     }
+
+    // Fetch all orders
+    const orders: Order[] = [];
     
-    const orders = await Promise.all(
-      orderJsonBlobs.map(blob => get<Order>(blob.url))
-    );
+    for (const key of listResult.keys) {
+      try {
+        const result = await window.storage.get(key, true);
+        if (result && result.value) {
+          const order: Order = JSON.parse(result.value);
+          orders.push(order);
+        }
+      } catch (error) {
+        console.error(`Error fetching order ${key}:`, error);
+        // Continue with other orders
+      }
+    }
 
     return orders;
   } catch (error) {
