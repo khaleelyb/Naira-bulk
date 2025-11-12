@@ -1,4 +1,3 @@
-
 export enum AppView {
   HOME,
   FORM,
@@ -7,9 +6,13 @@ export enum AppView {
   LOGIN,
 }
 
-export interface OrderData {
+/**
+ * Represents the data collected from the user in the order form.
+ */
+export interface OrderFormData {
   fullName: string;
   phone: string;
+
   email: string;
   address: string;
   store: 'Temu' | 'AliExpress';
@@ -17,13 +20,24 @@ export interface OrderData {
   notes?: string;
 }
 
-export interface FullOrderData extends OrderData {
+/**
+ * Represents a complete order as stored in the persistent storage.
+ * File objects are replaced with their public URLs.
+ */
+export interface Order {
   orderId: string;
-  paymentProof?: File;
+  createdAt: number; // For sorting
+  fullName: string;
+  phone: string;
+  email: string;
+  address: string;
+  store: 'Temu' | 'AliExpress';
+  screenshot: string; // URL
+  notes?: string;
+  paymentProof?: string; // URL
   isProcessed?: boolean;
 }
 
-// Fix: Add missing CartAnalysisResult interface
 export interface CartAnalysisResult {
   totalPrice: string;
   items: string[];

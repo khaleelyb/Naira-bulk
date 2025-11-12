@@ -1,15 +1,14 @@
-
 import React, { useState, useRef } from 'react';
-import { OrderData } from '../types';
+import { OrderFormData } from '../types';
 import { UploadIcon } from './icons/UploadIcon';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 
 interface OrderFormProps {
-  onOrderSubmit: (data: OrderData, orderId: string) => void;
+  onOrderSubmit: (data: OrderFormData) => Promise<void>;
 }
 
 const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
-  const [formData, setFormData] = useState<Omit<OrderData, 'screenshot'>>({
+  const [formData, setFormData] = useState<Omit<OrderFormData, 'screenshot'>>({
     fullName: '',
     phone: '',
     email: '',
@@ -46,7 +45,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!screenshot) {
       setError('Please upload a screenshot of your cart.');
@@ -56,13 +55,15 @@ const OrderForm: React.FC<OrderFormProps> = ({ onOrderSubmit }) => {
     setIsLoading(true);
     setError(null);
 
-    // Simulate a submission delay for better UX, as if talking to a server.
-    setTimeout(() => {
-      const orderId = `NB-${Date.now()}`;
-      const fullOrderData: OrderData = { ...formData, screenshot };
-      onOrderSubmit(fullOrderData, orderId);
-      // No need to call setIsLoading(false) because the component will unmount on success.
-    }, 1000);
+    try {
+      const fullOrderData: OrderFormData = { ...formData, screenshot };
+      await onOrderSubmit(fullOrderData);
+      // On success, the parent component will change the view, so we don't need to setIsLoading(false)
+    } catch (err) {
+        console.error("Failed to submit order:", err);
+        setError(err instanceof Error ? err.message : "An unknown error occurred. Please try again.");
+        setIsLoading(false);
+    }
   };
 
   return (

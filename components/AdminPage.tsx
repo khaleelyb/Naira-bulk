@@ -1,6 +1,7 @@
-
-import React, { useEffect, useState } from 'react';
-import { FullOrderData } from '../types';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Order } from '../types';
+import { getAllOrders, markOrderAsProcessed } from '../services/blobService';
+import { SpinnerIcon } from './icons/SpinnerIcon';
 
 const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg 
@@ -16,34 +17,11 @@ const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 interface OrderCardProps {
-    order: FullOrderData;
-    onMarkAsProcessed: (orderId: string) => void;
+    order: Order;
+    onMarkAsProcessed: (orderId: string) => Promise<void>;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
-    const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
-    const [proofUrl, setProofUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        const ssUrl = URL.createObjectURL(order.screenshot);
-        setScreenshotUrl(ssUrl);
-
-        let pUrl: string | null = null;
-        if (order.paymentProof) {
-            pUrl = URL.createObjectURL(order.paymentProof);
-            setProofUrl(pUrl);
-        } else {
-            setProofUrl(null); // Ensure proofUrl is cleared if paymentProof is removed/not present
-        }
-
-        return () => {
-            URL.revokeObjectURL(ssUrl);
-            if (pUrl) {
-                URL.revokeObjectURL(pUrl);
-            }
-        };
-    }, [order.screenshot, order.paymentProof]);
-
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
             <div className="flex justify-between items-start flex-wrap gap-2">
@@ -88,17 +66,17 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
                 <div>
                     <h4 className="font-semibold text-gray-600 mb-2">Cart Screenshot</h4>
-                    {screenshotUrl && (
-                        <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" title="View full image">
-                            <img src={screenshotUrl} alt="Cart screenshot" className="w-full h-auto max-h-80 object-contain rounded-md border p-1 hover:opacity-80 transition-opacity bg-gray-50" />
+                    {order.screenshot && (
+                        <a href={order.screenshot} target="_blank" rel="noopener noreferrer" title="View full image">
+                            <img src={order.screenshot} alt="Cart screenshot" className="w-full h-auto max-h-80 object-contain rounded-md border p-1 hover:opacity-80 transition-opacity bg-gray-50" />
                         </a>
                     )}
                 </div>
                 <div>
                     <h4 className="font-semibold text-gray-600 mb-2">Payment Proof</h4>
-                    {proofUrl ? (
-                         <a href={proofUrl} target="_blank" rel="noopener noreferrer" title="View full image">
-                            <img src={proofUrl} alt="Payment proof" className="w-full h-auto max-h-80 object-contain rounded-md border p-1 hover:opacity-80 transition-opacity bg-gray-50" />
+                    {order.paymentProof ? (
+                         <a href={order.paymentProof} target="_blank" rel="noopener noreferrer" title="View full image">
+                            <img src={order.paymentProof} alt="Payment proof" className="w-full h-auto max-h-80 object-contain rounded-md border p-1 hover:opacity-80 transition-opacity bg-gray-50" />
                         </a>
                     ) : (
                         <div className="flex items-center justify-center h-full bg-gray-50 rounded-md border-2 border-dashed p-4">
@@ -131,67 +109,79 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
 
 
 interface AdminPageProps {
-  orders: FullOrderData[];
-  onMarkAsProcessed: (orderId: string) => void;
   isServiceOpen: boolean;
   onToggleServiceStatus: () => void;
 }
 
-const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed, isServiceOpen, onToggleServiceStatus }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceStatus }) => {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const fetchedOrders = await getAllOrders();
+      // Sort by newest first
+      fetchedOrders.sort((a, b) => b.createdAt - a.createdAt);
+      setOrders(fetchedOrders);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+  
+  const handleMarkAsProcessed = async (orderId: string) => {
+    try {
+      await markOrderAsProcessed(orderId);
+      // Refetch to get the latest status
+      await fetchOrders();
+    } catch (err) {
+      console.error(`Failed to mark order ${orderId} as processed:`, err);
+      alert(`Error: ${err instanceof Error ? err.message : "Could not process order."}`);
+    }
+  };
+
 
   const openOrders = orders.filter(order => !order.isProcessed);
   const closedOrders = orders.filter(order => order.isProcessed);
 
   const ordersToShow = activeTab === 'open' ? openOrders : closedOrders;
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center md:text-left mb-8">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
-          Admin Panel
-        </h2>
-      </div>
-
-      <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Service Status</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-lg font-semibold">
-              {isServiceOpen
-                ? <span className="text-green-700">Open for New Orders</span>
-                : <span className="text-red-700">Closed for New Orders</span>
-              }
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              When closed, users will not be able to start a new order.
-            </p>
-          </div>
-          <button
-            onClick={onToggleServiceStatus}
-            type="button"
-            role="switch"
-            aria-checked={isServiceOpen}
-            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-              isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              aria-hidden="true"
-              className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
-                isServiceOpen ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center p-12 bg-white rounded-xl shadow-lg">
+          <SpinnerIcon className="h-8 w-8 text-green-600 animate-spin mr-4" />
+          <p className="text-lg text-gray-600">Loading Orders...</p>
         </div>
-      </div>
-
-      {orders.length === 0 ? (
+      );
+    }
+    if (error) {
+       return (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-6 mb-6 rounded-xl shadow-lg" role="alert">
+            <p className="font-bold">Error Fetching Orders</p>
+            <p>{error}</p>
+        </div>
+      );
+    }
+    if (orders.length === 0) {
+      return (
         <div className="text-center bg-white p-8 rounded-xl shadow-lg">
           <h3 className="text-xl font-semibold text-gray-800">No Orders Yet</h3>
           <p className="mt-2 text-gray-500">When users submit orders, they will appear here.</p>
         </div>
-      ) : (
+      );
+    }
+    return (
         <div>
           {/* Tab Navigation */}
           <div className="border-b border-gray-200 mb-6">
@@ -236,14 +226,60 @@ const AdminPage: React.FC<AdminPageProps> = ({ orders, onMarkAsProcessed, isServ
             </div>
           ) : (
             <div className="space-y-8">
-              <p className="text-gray-600 px-2">Displaying {ordersToShow.length} {activeTab} order(s), newest first.</p>
-              {ordersToShow.slice().reverse().map((order) => (
-                <OrderCard key={order.orderId} order={order} onMarkAsProcessed={onMarkAsProcessed} />
+              <p className="text-gray-600 px-2">Displaying {ordersToShow.length} {activeTab} order(s).</p>
+              {ordersToShow.map((order) => (
+                <OrderCard key={order.orderId} order={order} onMarkAsProcessed={handleMarkAsProcessed} />
               ))}
             </div>
           )}
         </div>
-      )}
+    );
+  };
+
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <div className="text-center md:text-left mb-8">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+          Admin Panel
+        </h2>
+      </div>
+
+      <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Service Status</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold">
+              {isServiceOpen
+                ? <span className="text-green-700">Open for New Orders</span>
+                : <span className="text-red-700">Closed for New Orders</span>
+              }
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              When closed, users will not be able to start a new order.
+            </p>
+          </div>
+          <button
+            onClick={onToggleServiceStatus}
+            type="button"
+            role="switch"
+            aria-checked={isServiceOpen}
+            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+              isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                isServiceOpen ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {renderContent()}
+
     </div>
   );
 };

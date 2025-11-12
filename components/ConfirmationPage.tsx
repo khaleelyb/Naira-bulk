@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
 import { SpinnerIcon } from './icons/SpinnerIcon';
+import { addPaymentProof } from '../services/blobService';
 
 interface ConfirmationPageProps {
   orderId: string | null;
   onStartNewOrder: () => void;
-  onPaymentProofSubmit: (orderId: string, proof: File) => void;
 }
 
-const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ orderId, onStartNewOrder, onPaymentProofSubmit }) => {
+const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ orderId, onStartNewOrder }) => {
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +38,8 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ orderId, onStartNew
         if (fileInputRef.current) fileInputRef.current.value = "";
       } else {
         setPaymentProof(file);
-        setPreviewUrl(URL.createObjectURL(file));
+        const newPreviewUrl = URL.createObjectURL(file);
+        setPreviewUrl(newPreviewUrl);
         setError(null);
       }
     }
@@ -57,15 +58,15 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ orderId, onStartNew
     setIsUploading(true);
     setError(null);
     
-    // Pass the data up to the parent component
-    onPaymentProofSubmit(orderId, paymentProof);
-
-    // Simulate API call for demonstration and better UX
-    console.log('Uploading payment proof:', paymentProof.name);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    setIsUploading(false);
-    setUploadSuccess(true);
+    try {
+      await addPaymentProof(orderId, paymentProof);
+      setUploadSuccess(true);
+    } catch (err) {
+      console.error("Failed to upload payment proof:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (

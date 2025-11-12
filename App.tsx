@@ -1,6 +1,5 @@
-
 import React, { useState, useCallback } from 'react';
-import { AppView, OrderData, FullOrderData } from './types';
+import { AppView, OrderFormData } from './types';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import OrderForm from './components/OrderForm';
@@ -8,11 +7,11 @@ import ConfirmationPage from './components/ConfirmationPage';
 import Footer from './components/Footer';
 import AdminPage from './components/AdminPage';
 import LoginPage from './components/LoginPage';
+import { createOrder } from './services/blobService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.HOME);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [orders, setOrders] = useState<FullOrderData[]>([]);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isServiceOpen, setIsServiceOpen] = useState(true);
 
@@ -22,10 +21,8 @@ const App: React.FC = () => {
     }
   }, [isServiceOpen]);
 
-  const handleOrderSubmit = useCallback((data: OrderData, generatedOrderId: string) => {
-    console.log('Order submitted:', data);
-    const newOrder: FullOrderData = { ...data, orderId: generatedOrderId, isProcessed: false };
-    setOrders(prevOrders => [...prevOrders, newOrder]);
+  const handleOrderSubmit = useCallback(async (data: OrderFormData) => {
+    const generatedOrderId = await createOrder(data);
     setOrderId(generatedOrderId);
     setView(AppView.CONFIRMATION);
     window.scrollTo(0, 0);
@@ -35,24 +32,6 @@ const App: React.FC = () => {
     setOrderId(null);
     setView(AppView.HOME);
     window.scrollTo(0, 0);
-  }, []);
-
-  const handlePaymentProofSubmit = useCallback((orderIdToUpdate: string, proof: File) => {
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.orderId === orderIdToUpdate ? { ...order, paymentProof: proof } : order
-      )
-    );
-    console.log(`Payment proof for order ${orderIdToUpdate} submitted.`);
-  }, []);
-
-  const handleMarkAsProcessed = useCallback((orderIdToUpdate: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.orderId === orderIdToUpdate ? { ...order, isProcessed: true } : order
-      )
-    );
-    console.log(`Order ${orderIdToUpdate} marked as processed.`);
   }, []);
 
   const handleGoToAdmin = useCallback(() => {
@@ -66,6 +45,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleAdminLogin = useCallback((username, password) => {
+    // In a real app, this should be a secure API call.
     if (username === 'admin123' && password === '123234345') {
       setIsAdminAuthenticated(true);
       setView(AppView.ADMIN);
@@ -82,6 +62,8 @@ const App: React.FC = () => {
   }, []);
 
   const handleToggleServiceStatus = useCallback(() => {
+    // In a real app, this status should also be stored persistently.
+    // For now, it remains as local state.
     setIsServiceOpen(prev => !prev);
   }, []);
 
@@ -92,9 +74,9 @@ const App: React.FC = () => {
       case AppView.FORM:
         return <OrderForm onOrderSubmit={handleOrderSubmit} />;
       case AppView.CONFIRMATION:
-        return <ConfirmationPage orderId={orderId} onStartNewOrder={handleStartNewOrder} onPaymentProofSubmit={handlePaymentProofSubmit} />;
+        return <ConfirmationPage orderId={orderId} onStartNewOrder={handleStartNewOrder} />;
       case AppView.ADMIN:
-        return isAdminAuthenticated ? <AdminPage orders={orders} onMarkAsProcessed={handleMarkAsProcessed} isServiceOpen={isServiceOpen} onToggleServiceStatus={handleToggleServiceStatus} /> : <LoginPage onLogin={handleAdminLogin} />;
+        return isAdminAuthenticated ? <AdminPage isServiceOpen={isServiceOpen} onToggleServiceStatus={handleToggleServiceStatus} /> : <LoginPage onLogin={handleAdminLogin} />;
       case AppView.LOGIN:
         return <LoginPage onLogin={handleAdminLogin} />;
       default:
