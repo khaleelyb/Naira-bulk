@@ -49,10 +49,12 @@ interface ServiceStatus {
 async function put(pathname: string, body: File | string): Promise<VercelBlobResult> {
   if (!BLOB_READ_WRITE_TOKEN) throw new Error("Vercel Blob API token is not configured.");
   
-  const response = await fetch(`${BLOB_API_URL}/${pathname}`, {
+  const putUrl = new URL(`${BLOB_API_URL}/${pathname}`);
+  putUrl.searchParams.set('token', BLOB_READ_WRITE_TOKEN);
+
+  const response = await fetch(putUrl.toString(), {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${BLOB_READ_WRITE_TOKEN}`,
       'x-vercel-blob-client': 'NairaBulk-App-0.1',
       // Allow overwriting for config files and order updates
       'x-add-or-replace': '1',
@@ -88,16 +90,21 @@ async function get<T>(url: string): Promise<T> {
 async function list(): Promise<VercelBlobListResult> {
     if (!BLOB_READ_WRITE_TOKEN) throw new Error("Vercel Blob API token is not configured.");
 
-    const response = await fetch(`${BLOB_API_URL}?list=1`, {
-        method: 'POST',
+    const listUrl = new URL(BLOB_API_URL);
+    listUrl.searchParams.set('prefix', `${FOLDER_PREFIX}/`);
+    listUrl.searchParams.set('limit', '1000');
+    // The token parameter is not supported for the list operation.
+    // It must be sent in the Authorization header.
+
+    const response = await fetch(listUrl.toString(), {
+        method: 'GET',
         headers: {
             'Authorization': `Bearer ${BLOB_READ_WRITE_TOKEN}`,
-            'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prefix: `${FOLDER_PREFIX}/`, limit: 1000 })
     });
      if (!response.ok) {
-        throw new Error(`Failed to list blobs: ${await response.text()}`);
+        const errorText = await response.text();
+        throw new Error(`Failed to list blobs: ${errorText}`);
     }
     return response.json();
 }

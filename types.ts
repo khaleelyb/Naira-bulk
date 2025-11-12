@@ -37,8 +37,3 @@ export interface Order {
   paymentProof?: string; // URL
   isProcessed?: boolean;
 }
-
-export interface CartAnalysisResult {
-  totalPrice: string;
-  items: string[];
-}
