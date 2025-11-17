@@ -1,14 +1,12 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Order, OrderFormData } from '../types';
 
 const supabaseUrl = 'https://dqgzeswlviazddrgxidd.supabase.co';
-// This key should be the public anonymous key, provided via environment variables.
-// The execution environment provides API keys via process.env.API_KEY.
-const supabaseKey = process.env.API_KEY;
+// Using the anon key from your .env.local file
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxZ3plc3dsdmlhemRkcmd4aWRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4NzUwMTQsImV4cCI6MjA3ODQ1MTAxNH0.nn7w4fK2EV-ec073bzRJiDbKMf1p-sxf-256TgPO4bY';
 
 if (!supabaseKey) {
-    throw new Error("API key for Supabase is not configured. Please ensure the API_KEY environment variable is set.");
+    throw new Error("API key for Supabase is not configured.");
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
