@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Order, OrderFormData } from '../types';
+import { Order, OrderFormData, GlobalNotice } from '../types';
 
 const supabaseUrl = 'https://dqgzeswlviazddrgxidd.supabase.co';
 // Using the anon key from your .env.local file
@@ -73,6 +73,51 @@ export async function setServiceStatus(isServiceOpen: boolean): Promise<void> {
     if (error) {
         console.error('Failed to set service status:', error);
         throw new Error(`Failed to set service status: ${error.message}`);
+    }
+}
+
+/**
+ * Retrieves the global notice/announcement.
+ */
+export async function getGlobalNotice(): Promise<GlobalNotice> {
+    try {
+        const { data, error } = await supabase
+            .from('config')
+            .select('value')
+            .eq('key', 'global-notice')
+            .single();
+
+        if (error) {
+             // If not found, return a default inactive notice
+            if (error.code === 'PGRST116') {
+                return { message: '', type: 'info', isActive: false };
+            }
+            throw error;
+        }
+
+        if (data?.value) {
+            return data.value as GlobalNotice;
+        }
+        
+        return { message: '', type: 'info', isActive: false };
+
+    } catch (error) {
+        console.error("Could not fetch global notice:", error);
+        return { message: '', type: 'info', isActive: false };
+    }
+}
+
+/**
+ * Updates the global notice/announcement.
+ */
+export async function updateGlobalNotice(notice: GlobalNotice): Promise<void> {
+    const { error } = await supabase
+        .from('config')
+        .upsert({ key: 'global-notice', value: notice });
+    
+    if (error) {
+        console.error('Failed to update global notice:', error);
+        throw new Error(`Failed to update global notice: ${error.message}`);
     }
 }
 
