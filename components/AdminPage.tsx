@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Order } from '../types';
-import { getAllOrders, markOrderAsProcessed } from '../services/blobService';
+import { getAllOrders, markOrderAsProcessed } from '../services/supabaseService';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 
 const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
