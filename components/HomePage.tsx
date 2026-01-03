@@ -102,7 +102,7 @@ const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick, isServiceOpen })
                 Click one of the buttons above to visit Temu or AliExpress. Add all your desired items to your shopping cart.
             </Step>
             <Step number="2" title="Take a Screenshot">
-                Once your cart is final, take a clear screenshot showing all items and the total price.
+                take a clear screenshot showing all items and the total price.
             </Step>
             <Step number="3" title="Submit Our Order Form">
                 Return here, click "Place Your Order" below, fill in your details, and upload your cart screenshot.
