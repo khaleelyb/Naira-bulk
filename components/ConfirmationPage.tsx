@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
 import { SpinnerIcon } from './icons/SpinnerIcon';
-import { addPaymentProof } from '../services/blobService';
+import { addPaymentProof } from '../services/supabaseService';
 
 interface ConfirmationPageProps {
   orderId: string | null;
