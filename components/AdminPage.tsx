@@ -28,6 +28,15 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMarkAsProcessed }) => {
                 <div>
                     <h3 className="text-lg font-bold text-gray-800">Order ID</h3>
                     <p className="font-mono text-green-600 bg-green-50 px-2 py-1 rounded-md inline-block">{order.orderId}</p>
+                    <p className="text-xs text-gray-500 mt-1" title="Order Date">
+                        {new Date(order.createdAt).toLocaleString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </p>
                 </div>
                 <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
                     order.paymentProof ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -125,8 +134,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
     setError(null);
     try {
       const fetchedOrders = await getAllOrders();
-      // Sort by newest first
-      fetchedOrders.sort((a, b) => b.createdAt - a.createdAt);
+      // Ordering is now handled by the backend (newest first)
       setOrders(fetchedOrders);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
