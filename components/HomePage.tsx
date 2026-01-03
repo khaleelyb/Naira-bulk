@@ -113,6 +113,18 @@ const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick, isServiceOpen })
         </div>
       </section>
       
+      <section className="mt-12 bg-white p-8 rounded-xl shadow-lg">
+        <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">warning</h3>
+        <div className="space-y-8">
+            <Step number="1" title="Screenshot">
+                Take the latest image when you order dont use old image.
+            </Step>
+            <Step number="2" title="payment">
+                pay exactly as you see if not no full refund.
+            </Step>
+        </div>
+      </section>
+      
       <div id="order-form" className="mt-12 text-center">
         <button
           onClick={onPlaceOrderClick}
