@@ -193,7 +193,8 @@ export async function markOrderAsProcessed(orderId: string): Promise<void> {
 export async function getAllOrders(): Promise<Order[]> {
     const { data, error } = await supabase
         .from('orders')
-        .select('*');
+        .select('*')
+        .order('createdAt', { ascending: false }); // Sort by newest first
 
     if (error) {
         console.error('Failed to fetch all orders:', error);
