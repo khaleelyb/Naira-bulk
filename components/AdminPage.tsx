@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Order } from '../types';
-import { getAllOrders, markOrderAsProcessed } from '../services/supabaseService';
+import { Order, GlobalNotice } from '../types';
+import { getAllOrders, markOrderAsProcessed, getGlobalNotice, updateGlobalNotice } from '../services/supabaseService';
 import { SpinnerIcon } from './icons/SpinnerIcon';
 
 const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -128,13 +128,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+  
+  // Global Notice State
+  const [notice, setNotice] = useState<GlobalNotice>({ message: '', type: 'info', isActive: false });
+  const [isSavingNotice, setIsSavingNotice] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const fetchedOrders = await getAllOrders();
-      // Ordering is now handled by the backend (newest first)
       setOrders(fetchedOrders);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
@@ -144,14 +147,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
     }
   }, []);
 
+  const fetchNotice = useCallback(async () => {
+      const fetchedNotice = await getGlobalNotice();
+      if (fetchedNotice) {
+          setNotice(fetchedNotice);
+      }
+  }, []);
+
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+    fetchNotice();
+  }, [fetchOrders, fetchNotice]);
   
   const handleMarkAsProcessed = async (orderId: string) => {
     try {
       await markOrderAsProcessed(orderId);
-      // Refetch to get the latest status
       await fetchOrders();
     } catch (err)
  {
@@ -168,6 +178,18 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
       setIsTogglingStatus(false);
     }
   }, [onToggleServiceStatus]);
+  
+  const handleSaveNotice = async () => {
+      setIsSavingNotice(true);
+      try {
+          await updateGlobalNotice(notice);
+          alert("Announcement updated successfully!");
+      } catch (err) {
+          alert("Failed to update announcement.");
+      } finally {
+          setIsSavingNotice(false);
+      }
+  };
 
 
   const openOrders = orders.filter(order => !order.isProcessed);
@@ -257,45 +279,111 @@ const AdminPage: React.FC<AdminPageProps> = ({ isServiceOpen, onToggleServiceSta
 
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center md:text-left mb-8">
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="text-center md:text-left">
         <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
           Admin Panel
         </h2>
       </div>
-
-      <div className="mb-8 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Service Status</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-lg font-semibold">
-              {isServiceOpen
-                ? <span className="text-green-700">Open for New Orders</span>
-                : <span className="text-red-700">Closed for New Orders</span>
-              }
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              When closed, users will not be able to start a new order.
-            </p>
+      
+      {/* Service Status & Global Announcement Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Service Status Card */}
+          <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200 h-full">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Service Status</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg font-semibold">
+                  {isServiceOpen
+                    ? <span className="text-green-700">Open for New Orders</span>
+                    : <span className="text-red-700">Closed for New Orders</span>
+                  }
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  When closed, users cannot start new orders.
+                </p>
+              </div>
+              <button
+                onClick={handleToggle}
+                type="button"
+                role="switch"
+                aria-checked={isServiceOpen}
+                disabled={isTogglingStatus}
+                className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-75 disabled:cursor-wait ${
+                  isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                    isServiceOpen ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleToggle}
-            type="button"
-            role="switch"
-            aria-checked={isServiceOpen}
-            disabled={isTogglingStatus}
-            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-75 disabled:cursor-wait ${
-              isServiceOpen ? 'bg-green-600' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              aria-hidden="true"
-              className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
-                isServiceOpen ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
+
+          {/* Global Announcement Card */}
+          <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200 h-full">
+             <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-xl font-bold text-gray-800">Global Announcement</h3>
+                 <div className="flex items-center gap-2">
+                     <span className={`text-sm font-medium ${notice.isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                         {notice.isActive ? 'Active' : 'Inactive'}
+                     </span>
+                     <button
+                        onClick={() => setNotice(prev => ({ ...prev, isActive: !prev.isActive }))}
+                        type="button"
+                        role="switch"
+                        aria-checked={notice.isActive}
+                        className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          notice.isActive ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                            notice.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                 </div>
+             </div>
+             <div className="space-y-4">
+                 <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                     <textarea
+                        value={notice.message}
+                        onChange={(e) => setNotice(prev => ({ ...prev, message: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        rows={2}
+                        placeholder="Enter announcement text..."
+                     />
+                 </div>
+                 <div className="flex items-end justify-between gap-4">
+                    <div className="flex-1">
+                         <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                         <select
+                            value={notice.type}
+                            onChange={(e) => setNotice(prev => ({ ...prev, type: e.target.value as any }))}
+                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                         >
+                             <option value="info">Info (Blue)</option>
+                             <option value="warning">Warning (Yellow)</option>
+                             <option value="alert">Alert (Red)</option>
+                         </select>
+                    </div>
+                    <button
+                        onClick={handleSaveNotice}
+                        disabled={isSavingNotice}
+                        className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                    >
+                        {isSavingNotice ? 'Saving...' : 'Save'}
+                    </button>
+                 </div>
+             </div>
+          </div>
       </div>
 
       {renderContent()}
