@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TemuIcon } from './icons/TemuIcon';
 import { AliExpressIcon } from './icons/AliExpressIcon';
+import { getGlobalNotice } from '../services/supabaseService';
+import { GlobalNotice } from '../types';
 
 interface HomePageProps {
   onPlaceOrderClick: () => void;
@@ -22,8 +24,41 @@ const Step: React.FC<{ number: string; title: string; children: React.ReactNode 
 
 
 const HomePage: React.FC<HomePageProps> = ({ onPlaceOrderClick, isServiceOpen }) => {
+  const [notice, setNotice] = useState<GlobalNotice | null>(null);
+
+  useEffect(() => {
+    getGlobalNotice().then(fetchedNotice => {
+        setNotice(fetchedNotice);
+    });
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto">
+      
+      {/* Global Notice Banner */}
+      {notice && notice.isActive && notice.message && (
+        <div 
+          className={`mb-8 border-l-4 p-4 rounded-md shadow flex items-start ${
+            notice.type === 'alert' ? 'bg-red-100 border-red-500 text-red-800' :
+            notice.type === 'warning' ? 'bg-yellow-100 border-yellow-500 text-yellow-800' :
+            'bg-blue-100 border-blue-500 text-blue-800'
+          }`} 
+          role="alert"
+        >
+          <div className="mr-3 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold mb-1">
+                {notice.type === 'alert' ? 'Important Alert' : notice.type === 'warning' ? 'Notice' : 'Announcement'}
+            </p>
+            <p className="whitespace-pre-line">{notice.message}</p>
+          </div>
+        </div>
+      )}
+
       {!isServiceOpen && (
         <div className="mb-8 bg-orange-100 border-l-4 border-orange-500 text-orange-800 p-4 rounded-md shadow" role="status">
           <p className="font-bold">Temporarily Closed for New Orders</p>
