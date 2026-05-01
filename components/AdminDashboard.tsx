@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, User } from '../types';
+import { ChinaImportAdmin } from './ChinaImportAdmin';
 
 export interface Order {
   id: string;
@@ -31,9 +32,11 @@ interface AdminDashboardProps {
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
   onBack: () => void;
+  importRequests: any[];
+  onRefreshImports: () => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'users';
+type AdminTab = 'overview' | 'orders' | 'products' | 'users' | 'china';
 
 const VerifiedBadge = () => (
   <span title="Verified" className="inline-flex items-center justify-center">
@@ -188,12 +191,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const tabs: { id: AdminTab; label: string; badge?: number }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'orders', label: 'Orders', badge: pendingShipment.length },
-    { id: 'products', label: 'Products' },
-    { id: 'users', label: 'Users' },
-  ];
-
+  { id: 'overview', label: 'Overview' },
+  { id: 'orders', label: 'Orders', badge: pendingShipment.length },
+  { id: 'products', label: 'Products' },
+  { id: 'users', label: 'Users' },
+  { id: 'china', label: '🇨🇳 China Imports', badge: importRequests.filter(r => r.status === 'pending').length },
+];
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
