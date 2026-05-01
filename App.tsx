@@ -729,18 +729,23 @@ case 'cart':
 
       case 'home':
       default:
-        // Search results
-        if (searchQuery) {
-          return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="pt-6 pb-2">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  <span className="font-semibold text-gray-800 dark:text-gray-200">
-                    {filteredProducts.length + filteredSellers.length} results
-                  </span>{' '}
-                  for "{searchQuery}"
-                </p>
-              </div>
+        return (
+  <HomePage
+    products={products}
+    users={users}
+    currentUser={currentUser}
+    savedProductIds={savedProductIds}
+    onToggleSave={handleToggleSave}
+    onSelectProduct={handleSelectProduct}
+    onMessageSeller={handleMessageSeller}
+    onPostAdClick={handlePostAdClick}
+    onSelectCategory={handleSelectCategory}
+    onSelectShop={handleSelectShop}
+    onChinaImportClick={handleChinaImportClick}
+    isActiveBoosted={isActiveBoosted}
+    sessionCategoryPick={sessionCategoryPick}
+  />
+);
 
               {/* Matching Shops */}
               {filteredSellers.length > 0 && (
