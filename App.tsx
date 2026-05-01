@@ -657,7 +657,12 @@ cartItemCount={cartItems.find(i => i.product.id === selectedProduct.id)?.quantit
               onDeleteUser={handleAdminDeleteUser} 
               onUpdateUser={handleAdminUpdateUser} 
               onUpdateOrderStatus={handleUpdateOrderStatus}
-              onBack={handleBack} 
+              onBack={handleBack}
+              importRequests={importRequests}
+  onRefreshImports={() => {
+    supabase.from('import_requests').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setImportRequests(data); });
+  }}
             />
           : <AuthPrompt page="home" onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} />;
 
