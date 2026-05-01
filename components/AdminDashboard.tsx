@@ -733,6 +733,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
         )}
+        {tab === 'china' && (
+  <ChinaImportAdmin
+    requests={importRequests}
+    onRefresh={onRefreshImports}
+    showToast={/* pass your toast function */}
+  />
+)}
       </div>
 
       {/* Confirm Delete Modal */}
