@@ -49,6 +49,7 @@ const App: React.FC = () => {
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const sessionCategoryPick = new Map<string, string>();
+  const [importRequests, setImportRequests] = useState<any[]>([]);
 
   // UI State
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -74,9 +75,11 @@ const App: React.FC = () => {
   const load = async () => {
     setIsLoading(true);
     try {
-      const [productsData, usersData, threadsData, ordersData] = await Promise.all([
-        db.getProducts(), db.getUsers(), db.getThreads(), db.getOrders()
-      ]);
+      const [productsData, usersData, threadsData, ordersData, importRequestsData] = await Promise.all([
+  db.getProducts(), db.getUsers(), db.getThreads(), db.getOrders(),
+  supabase.from('import_requests').select('*').order('created_at', { ascending: false }).then(({ data }) => data ?? [])
+]);
+setImportRequests(importRequestsData);
       setProducts(productsData);
       setUsers(usersData);
       setThreads(threadsData);
@@ -463,6 +466,14 @@ const handleChangePassword = async (currentPassword: string, newPassword: string
     setSelectedShop(seller);
   };
 
+const handleChinaImportClick = () => {
+  window.history.pushState({ page: 'china-import' }, '', '#china-import');
+  setActivePage('china-import');
+  setSelectedProduct(null);
+  setSelectedCategory(null);
+  setSelectedShop(null);
+};
+  
   const handleSelectProduct = (product: Product) => {
     scrollPosition.current = window.scrollY;
     window.history.pushState({ view: 'product', productId: product.id, page: activePage }, '', `#product=${product.id}`);
@@ -655,6 +666,14 @@ cartItemCount={cartItems.find(i => i.product.id === selectedProduct.id)?.quantit
           ? <SavedPage products={savedProducts} onMessageSeller={handleMessageSeller} savedProductIds={savedProductIds} onToggleSave={handleToggleSave} onSelectProduct={handleSelectProduct} />
           : <AuthPrompt page="saved" onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} />;
 
+        case 'china-import':
+  return (
+    <ChinaImportPage
+      currentUser={currentUser}
+      onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })}
+      onBack={handleBack}
+    />
+  );
       case 'messages':
         return currentUser
           ? <MessagesPage threads={threads} currentUser={currentUser} users={users} onSelectThread={handleThreadSelect} />
