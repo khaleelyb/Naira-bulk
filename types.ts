@@ -10,21 +10,27 @@ export interface Product {
   sellerId: string;
 }
 
-export interface User {
+export interface ImportRequest {
   id: string;
-  name: string;
-  username: string;
-  profilePicture: string;
-  phone?: string;
-  bio?: string;          // ← add this
-  isAdmin?: boolean;
-  isVerified?: boolean;
-  isBoosted?: boolean;
-  boostedUntil?: string | null;
-  isApprovedSeller?: boolean;
-  email?: string;
-  address?: string;
-  pin?: string | null;
+  buyerId: string;
+  buyerName: string;
+  buyerPhone: string;
+  buyerEmail?: string;
+  productUrl?: string;
+  productDescription: string;
+  category: string;
+  quantity: number;
+  budgetMin?: number;
+  budgetMax?: number;
+  referenceImage?: string;
+  status: 'pending' | 'reviewing' | 'quoted' | 'confirmed' | 'sourcing' | 'shipped' | 'delivered' | 'cancelled';
+  adminNote?: string;
+  quotedPrice?: number;
+  shippingFee?: number;
+  estimatedDelivery?: string;
+  trackingNumber?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type Theme = 'light' | 'dark' | 'system';
@@ -50,4 +56,4 @@ export interface MessageThread {
   lastMessageTimestamp: number;
 }
 
-export type Page = 'home' | 'saved' | 'messages' | 'profile' | 'edit-profile' | 'admin' | 'cart';
+export type Page = 'home' | 'saved' | 'messages' | 'profile' | 'edit-profile' | 'admin' | 'cart' | 'china-import';
