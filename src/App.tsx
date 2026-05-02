@@ -10,6 +10,8 @@ import { SignupPage } from './pages/SignupPage';
 import { ProductDetailsPage } from './pages/ProductDetails';
 import { CartPage } from './pages/CartPage';
 import { AdminLayout } from './components/layout/AdminLayout';
+import { AdminGuard } from './components/layout/AdminGuard';
+import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
 import { AdminProducts } from './pages/admin/Adminlayout';
 import { UserDashboard } from './pages/UserDashboard';
@@ -42,6 +44,7 @@ export default function App() {
         <Navbar session={session} />
         <main className="flex-grow">
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/import" element={<ImportFromChinaPage />} />
@@ -49,19 +52,30 @@ export default function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            
-            {/* Protected Routes */}
-            <Route 
-              path="/dashboard/*" 
-              element={session ? <UserDashboard /> : <Navigate to="/login" />} 
+
+            {/* Protected user routes */}
+            <Route
+              path="/dashboard/*"
+              element={session ? <UserDashboard /> : <Navigate to="/login" />}
             />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={session ? <AdminLayout /> : <Navigate to="/login" />}>
-              <Route index element={<Navigate to="china-orders" />} />
+
+            {/* Admin routes — role-gated */}
+            <Route
+              path="/admin"
+              element={
+                <AdminGuard session={session}>
+                  <AdminLayout />
+                </AdminGuard>
+              }
+            >
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<AdminOverview />} />
               <Route path="china-orders" element={<AdminChinaOrders />} />
               <Route path="products" element={<AdminProducts />} />
             </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <footer className="bg-neutral-900 text-white py-12 px-4 mt-auto">
