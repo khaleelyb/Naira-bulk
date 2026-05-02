@@ -11,7 +11,7 @@ import { ProductDetailsPage } from './pages/ProductDetails';
 import { CartPage } from './pages/CartPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminGuard } from './components/layout/AdminGuard';
-import { AdminOverview } from './pages/admin/AdminOverview';
+import { AdminOverview } from './components/layout/AdminOverview';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
 import { AdminProducts } from './pages/admin/Adminlayout';
 import { UserDashboard } from './pages/UserDashboard';
@@ -54,6 +54,10 @@ export default function App() {
             <Route path="/signup" element={<SignupPage />} />
 
             {/* Protected user routes */}
+            <Route
+              path="/dashboard"
+              element={session ? <UserDashboard /> : <Navigate to="/login" />}
+            />
             <Route
               path="/dashboard/*"
               element={session ? <UserDashboard /> : <Navigate to="/login" />}
