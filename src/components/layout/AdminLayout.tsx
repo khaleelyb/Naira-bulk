@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Globe, Package, LogOut, HardDrive } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { supabase } from '../../lib/supabase';
+import { ADMIN_SESSION_KEY } from '../../pages/AdminLoginPage';
 
 const ADMIN_NAV = [
   { label: 'Overview',     path: '/admin/overview',      icon: LayoutDashboard },
@@ -14,9 +14,9 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+  const handleLogout = () => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    navigate('/admin-login', { replace: true });
   };
 
   return (
@@ -71,11 +71,11 @@ export function AdminLayout() {
         <div className="h-16 bg-white border-b border-slate-200 hidden lg:flex items-center justify-end px-10 gap-6 shadow-sm sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[10px] font-bold text-slate-900 uppercase tracking-widest leading-none">Admin</p>
+              <p className="text-[10px] font-bold text-slate-900 uppercase tracking-widest leading-none">Superadmin</p>
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Administrator</p>
             </div>
             <div className="h-10 w-10 bg-[#FF5A00] rounded-full flex items-center justify-center text-white font-bold text-xs">
-              AD
+              SA
             </div>
           </div>
         </div>
