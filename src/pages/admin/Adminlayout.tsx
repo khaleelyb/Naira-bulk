@@ -52,7 +52,7 @@ const TABS = [
   { id: 'announcements', label: 'Announcements', icon: Megaphone },
 ];
 
-export function AdminMarketplace() {
+export function AdminProducts() {
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState<MarketplaceSettings>({ ...DEFAULT_SETTINGS });
   const [saving, setSaving] = useState(false);
@@ -61,7 +61,7 @@ export function AdminMarketplace() {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [stats, setStats] = useState({ totalProducts: 0, activeCategories: 0, avgPrice: 0 });
-  const [categoryOrder, setCategoryOrder] = useState(Object.keys(CATEGORY_ICONS));
+  const [categoryOrder] = useState(Object.keys(CATEGORY_ICONS));
   const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -80,16 +80,16 @@ export function AdminMarketplace() {
   };
 
   const loadStats = async () => {
-    const [productsRes] = await Promise.all([
-      supabase.from('products').select('id, category, price, discount_price')
-    ]);
-    const allProducts = productsRes.data || [];
-    const categories = new Set(allProducts.map(p => p.category));
-    const avgPrice = allProducts.length
-      ? allProducts.reduce((s, p) => s + (p.discount_price || p.price), 0) / allProducts.length
+    const { data: allProducts } = await supabase
+      .from('products')
+      .select('id, category, price, discount_price');
+    const list = allProducts || [];
+    const categories = new Set(list.map((p: any) => p.category));
+    const avgPrice = list.length
+      ? list.reduce((s: number, p: any) => s + (p.discount_price || p.price), 0) / list.length
       : 0;
     setStats({
-      totalProducts: allProducts.length,
+      totalProducts: list.length,
       activeCategories: categories.size,
       avgPrice: Math.round(avgPrice),
     });
@@ -97,7 +97,7 @@ export function AdminMarketplace() {
 
   const handleSaveSettings = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 800)); // simulate save
+    await new Promise(r => setTimeout(r, 800));
     toast.success('Marketplace settings saved successfully');
     setSaving(false);
   };
@@ -128,7 +128,6 @@ export function AdminMarketplace() {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Storefront configuration & curation</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Maintenance Mode Toggle */}
           <div className={cn(
             "flex items-center gap-3 px-5 py-3 rounded-full border text-xs font-bold uppercase tracking-widest transition-all cursor-pointer",
             settings.maintenanceMode
@@ -211,7 +210,6 @@ export function AdminMarketplace() {
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20 transition-all"
                 />
               </div>
-
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hero Subtitle</label>
                 <textarea
@@ -221,7 +219,6 @@ export function AdminMarketplace() {
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20 transition-all resize-none"
                 />
               </div>
-
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">WhatsApp Number</label>
                 <input
@@ -231,7 +228,6 @@ export function AdminMarketplace() {
                   placeholder="234XXXXXXXXXX"
                 />
               </div>
-
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Free Shipping Threshold (₦)</label>
                 <input
@@ -241,8 +237,6 @@ export function AdminMarketplace() {
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3.5 px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20 transition-all"
                 />
               </div>
-
-              {/* Toggles */}
               <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 {[
                   { key: 'announcementActive', label: 'Announcement Bar', desc: 'Show top banner to all visitors' },
@@ -285,7 +279,6 @@ export function AdminMarketplace() {
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">Toggle categories shown on homepage</p>
               </div>
             </div>
-
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {categoryOrder.map(cat => {
                 const isHidden = hiddenCategories.includes(cat);
@@ -294,17 +287,13 @@ export function AdminMarketplace() {
                     key={cat}
                     className={cn(
                       "p-5 rounded-[24px] border transition-all cursor-pointer select-none group",
-                      isHidden
-                        ? "bg-slate-50 border-slate-100 opacity-60"
-                        : "bg-white border-slate-200 shadow-soft hover:border-[#FF5A00]"
+                      isHidden ? "bg-slate-50 border-slate-100 opacity-60" : "bg-white border-slate-200 shadow-soft hover:border-[#FF5A00]"
                     )}
                     onClick={() => toggleCategory(cat)}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-2xl group-hover:scale-110 transition-transform">{CATEGORY_ICONS[cat]}</span>
-                      {isHidden
-                        ? <EyeOff className="h-4 w-4 text-slate-300" />
-                        : <Eye className="h-4 w-4 text-green-500" />}
+                      {isHidden ? <EyeOff className="h-4 w-4 text-slate-300" /> : <Eye className="h-4 w-4 text-green-500" />}
                     </div>
                     <p className={cn("text-[10px] font-bold uppercase tracking-widest", isHidden ? "text-slate-400" : "text-slate-700")}>{cat}</p>
                     <p className="text-[9px] text-slate-400 mt-0.5 font-medium">
@@ -314,7 +303,6 @@ export function AdminMarketplace() {
                 );
               })}
             </div>
-
             <div className="bg-slate-50 rounded-2xl p-5 flex items-start gap-4">
               <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
               <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
@@ -339,7 +327,6 @@ export function AdminMarketplace() {
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
-
             <div className="relative">
               <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-300" />
               <input
@@ -349,7 +336,6 @@ export function AdminMarketplace() {
                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-11 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20"
               />
             </div>
-
             {loadingProducts ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 text-[#FF5A00] animate-spin" />
@@ -357,7 +343,7 @@ export function AdminMarketplace() {
             ) : (
               <div className="space-y-3">
                 {filteredProducts.length === 0 ? (
-                  <p className="text-center text-sm text-slate-400 py-8">No products found. Add some from the Products panel.</p>
+                  <p className="text-center text-sm text-slate-400 py-8">No products found.</p>
                 ) : filteredProducts.map(product => {
                   const isFeatured = featuredIds.includes(product.id);
                   return (
@@ -366,33 +352,22 @@ export function AdminMarketplace() {
                       onClick={() => toggleFeatured(product.id)}
                       className={cn(
                         "flex items-center gap-5 p-4 rounded-2xl border cursor-pointer transition-all",
-                        isFeatured
-                          ? "bg-[#FF5A00]/5 border-[#FF5A00]/20 shadow-sm"
-                          : "bg-white border-slate-100 hover:border-slate-200"
+                        isFeatured ? "bg-[#FF5A00]/5 border-[#FF5A00]/20 shadow-sm" : "bg-white border-slate-100 hover:border-slate-200"
                       )}
                     >
                       <div className="h-14 w-14 rounded-xl overflow-hidden border border-slate-100 shrink-0 bg-slate-50">
-                        {product.images?.[0] ? (
-                          <img src={product.images[0]} className="w-full h-full object-cover" alt={product.name} />
-                        ) : (
-                          <div className="h-full flex items-center justify-center text-slate-200">
-                            <Package className="h-5 w-5" />
-                          </div>
-                        )}
+                        {product.images?.[0]
+                          ? <img src={product.images[0]} className="w-full h-full object-cover" alt={product.name} />
+                          : <div className="h-full flex items-center justify-center text-slate-200"><Package className="h-5 w-5" /></div>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn("text-sm font-bold truncate", isFeatured ? "text-[#FF5A00]" : "text-slate-900")}>{product.name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded">{product.category}</span>
-                          <span className="text-[10px] font-bold text-slate-500">
-                            ₦{((product.discount_price || product.price) / 1000).toFixed(0)}K
-                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">₦{((product.discount_price || product.price) / 1000).toFixed(0)}K</span>
                         </div>
                       </div>
-                      <div className={cn(
-                        "h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                        isFeatured ? "bg-[#FF5A00] border-[#FF5A00]" : "border-slate-200"
-                      )}>
+                      <div className={cn("h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all", isFeatured ? "bg-[#FF5A00] border-[#FF5A00]" : "border-slate-200")}>
                         {isFeatured && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                       </div>
                     </div>
@@ -413,20 +388,15 @@ export function AdminMarketplace() {
                 <p className="text-[10px] text-slate-400 font-medium mt-0.5">Manage the top banner across all pages</p>
               </div>
             </div>
-
-            {/* Live Preview */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Preview</label>
               <div className={cn(
                 "py-2.5 px-4 text-center text-[11px] font-bold tracking-tight uppercase rounded-2xl transition-all",
-                settings.announcementActive
-                  ? "bg-[#FF5A00] text-white"
-                  : "bg-slate-100 text-slate-400 line-through"
+                settings.announcementActive ? "bg-[#FF5A00] text-white" : "bg-slate-100 text-slate-400 line-through"
               )}>
                 {settings.announcement || 'Enter announcement text below...'}
               </div>
             </div>
-
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Announcement Text</label>
               <textarea
@@ -438,15 +408,9 @@ export function AdminMarketplace() {
               />
               <p className="text-[9px] text-slate-400 font-medium text-right">{settings.announcement.length} characters</p>
             </div>
-
             <button
               onClick={() => setSettings(s => ({ ...s, announcementActive: !s.announcementActive }))}
-              className={cn(
-                "flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all w-full text-left",
-                settings.announcementActive
-                  ? "bg-green-50 border-green-200"
-                  : "bg-slate-50 border-slate-100"
-              )}
+              className={cn("flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all w-full text-left", settings.announcementActive ? "bg-green-50 border-green-200" : "bg-slate-50 border-slate-100")}
             >
               {settings.announcementActive
                 ? <ToggleRight className="h-6 w-6 text-green-500 shrink-0" />
@@ -458,8 +422,6 @@ export function AdminMarketplace() {
                 <p className="text-[10px] text-slate-400 font-medium">Click to toggle visibility</p>
               </div>
             </button>
-
-            {/* Quick presets */}
             <div className="space-y-3">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quick Presets</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
