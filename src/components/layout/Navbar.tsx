@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, User, Menu, X, Package, Globe2, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, Package, Globe2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 
 interface NavbarProps {
@@ -16,8 +15,11 @@ export function Navbar({ session }: NavbarProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setIsMenuOpen(false);
     navigate('/');
   };
+
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
@@ -61,7 +63,6 @@ export function Navbar({ session }: NavbarProps) {
             <div className="flex items-center gap-4 border-l pl-8 border-slate-200">
               <Link to="/cart" className="relative p-2 text-slate-600 hover:text-[#FF5A00] transition-colors">
                 <ShoppingCart className="h-5 w-5" />
-                <span className="absolute top-0 right-0 bg-[#FF5A00] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
               </Link>
               
               {session ? (
@@ -71,6 +72,12 @@ export function Navbar({ session }: NavbarProps) {
                       {session.user.email?.slice(0, 2).toUpperCase()}
                     </div>
                   </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm">
@@ -85,11 +92,11 @@ export function Navbar({ session }: NavbarProps) {
           <div className="flex lg:hidden items-center gap-4">
             <Link to="/cart" className="relative p-2 text-neutral-800">
               <ShoppingCart className="h-6 w-6" />
-              <span className="absolute top-0 right-0 bg-[#FF4700] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
             </Link>
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 text-neutral-800"
+              aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -115,23 +122,23 @@ export function Navbar({ session }: NavbarProps) {
                 />
                 <Search className="absolute right-3 top-3.5 h-4 w-4 text-neutral-400" />
               </div>
-              <Link to="/import" className="py-3 font-bold border-b border-neutral-50 flex items-center gap-3">
+              <Link to="/import" onClick={closeMenu} className="py-3 font-bold border-b border-neutral-50 flex items-center gap-3">
                 <Globe2 className="h-5 w-5 text-[#FF4700]" />
                 Import from China
               </Link>
-              <Link to="/track" className="py-3 font-bold border-b border-neutral-50 flex items-center gap-3">
+              <Link to="/track" onClick={closeMenu} className="py-3 font-bold border-b border-neutral-50 flex items-center gap-3">
                 <Package className="h-5 w-5 text-[#FF4700]" />
                 Track Order
               </Link>
               {session ? (
                 <>
-                  <Link to="/dashboard" className="py-3 font-bold border-b border-neutral-50">Dashboard</Link>
+                  <Link to="/dashboard" onClick={closeMenu} className="py-3 font-bold border-b border-neutral-50">Dashboard</Link>
                   <button onClick={handleLogout} className="py-3 font-bold text-red-500 text-left">Logout</button>
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-4 pt-2">
-                  <Link to="/login" className="py-3 text-center font-bold border rounded-lg">Login</Link>
-                  <Link to="/signup" className="py-3 text-center font-bold bg-[#FF4700] text-white rounded-lg">Signup</Link>
+                  <Link to="/login" onClick={closeMenu} className="py-3 text-center font-bold border rounded-lg">Login</Link>
+                  <Link to="/signup" onClick={closeMenu} className="py-3 text-center font-bold bg-[#FF4700] text-white rounded-lg">Signup</Link>
                 </div>
               )}
             </div>
