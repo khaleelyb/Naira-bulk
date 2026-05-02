@@ -1,36 +1,40 @@
-/**
- * Paystack Integration Utility
- * This handles the payment flow using Paystack Inline Javascript
- */
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (config: Record<string, unknown>) => { openIframe: () => void };
+    };
+  }
+}
 
-export const loadPaystackScript = (): Promise<void> => {
+const PAYSTACK_SCRIPT_ID = 'paystack-inline-js';
+
+export function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (document.getElementById('paystack-script')) {
+    if (document.getElementById(PAYSTACK_SCRIPT_ID)) {
       resolve();
       return;
     }
     const script = document.createElement('script');
     script.src = 'https://js.paystack.co/v1/inline.js';
-    script.id = 'paystack-script';
+    script.id = PAYSTACK_SCRIPT_ID;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Paystack SDK failed to load'));
     document.body.appendChild(script);
   });
-};
+}
 
-interface PaystackConfig {
+export interface PaystackConfig {
   key: string;
   email: string;
-  amount: number; // in Kobo
+  /** Amount in Kobo (multiply NGN by 100) */
+  amount: number;
   ref: string;
-  onSuccess: (response: any) => void;
+  onSuccess: (response: { reference: string }) => void;
   onCancel: () => void;
 }
 
-export const initializePayment = async (config: PaystackConfig) => {
+export async function initializePayment(config: PaystackConfig): Promise<void> {
   await loadPaystackScript();
-  
-  // @ts-ignore
   const handler = window.PaystackPop.setup({
     key: config.key,
     email: config.email,
@@ -40,6 +44,5 @@ export const initializePayment = async (config: PaystackConfig) => {
     callback: config.onSuccess,
     onClose: config.onCancel,
   });
-
   handler.openIframe();
-};
+}
