@@ -17,8 +17,8 @@ export interface Product {
   category: string;
   images: string[];
   video_url?: string;
-  variants?: any;
-  specifications?: any;
+  variants?: Record<string, unknown>;
+  specifications?: Record<string, unknown>;
   shipping_fee: number;
   is_verified_seller: boolean;
   created_at: string;
@@ -31,7 +31,7 @@ export interface ChinaOrder {
   image_url?: string;
   description?: string;
   quantity: number;
-  preferences?: any;
+  preferences?: Record<string, unknown>;
   shipping_method: string;
   destination: string;
   budget?: number;
@@ -57,13 +57,3 @@ export type ChinaOrderStatus =
   | 'In Transit'
   | 'Delivered'
   | 'Cancelled';
-
-export interface Order {
-  id: string;
-  user_id: string;
-  total_amount: number;
-  status: string;
-  payment_status: string;
-  payment_reference?: string;
-  created_at: string;
-}
