@@ -1,99 +1,106 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { Lock, User, ArrowRight, Loader2, Shield } from 'lucide-react';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+const ADMIN_USERNAME = 'superadmin';
+const ADMIN_PASSWORD = 'admin';
+export const ADMIN_SESSION_KEY = 'nairabulk_admin_session';
 
-type LoginFormData = z.infer<typeof loginSchema>;
-
-export function LoginPage() {
-  const [loading, setLoading] = useState(false);
+export function AdminLoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as { from?: string })?.from ?? '/';
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
-    if (error) {
-      toast.error(error.message);
+    await new Promise(r => setTimeout(r, 600)); // slight delay for UX
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+      navigate('/admin/overview', { replace: true });
     } else {
-      toast.success('Welcome back!');
-      navigate(from, { replace: true });
+      setError('Invalid credentials. Access denied.');
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center px-4 py-20 bg-slate-50">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+      {/* Background glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF5A00]/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900 mb-2">Welcome back</h1>
-          <p className="text-slate-500 text-sm font-medium">Access your sourcing dashboard and orders.</p>
+          <div className="inline-flex items-center justify-center h-16 w-16 bg-[#FF5A00]/10 border border-[#FF5A00]/20 rounded-[20px] mb-5">
+            <Shield className="h-7 w-7 text-[#FF5A00]" />
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Admin Access</h1>
+          <p className="text-slate-500 text-sm font-medium mt-2">Nairabulk Control Panel</p>
         </div>
 
-        <div className="bg-white p-10 rounded-[32px] border border-slate-200 shadow-soft">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+        <div className="bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl">
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Username */}
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">Email Address</label>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Username</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
+                <User className="absolute left-4 top-3.5 h-4 w-4 text-slate-600" />
                 <input
-                  {...register('email')}
-                  type="email"
-                  autoComplete="email"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20 transition-all"
-                  placeholder="name@company.com"
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  autoComplete="username"
+                  placeholder="superadmin"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/30 focus:border-[#FF5A00]/50 transition-all"
                 />
               </div>
-              {errors.email && <p className="text-[10px] font-bold text-red-500">{errors.email.message}</p>}
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">Password</label>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
+                <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-600" />
                 <input
-                  {...register('password')}
                   type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/20 transition-all"
                   placeholder="••••••••"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#FF5A00]/30 focus:border-[#FF5A00]/50 transition-all"
                 />
               </div>
-              {errors.password && <p className="text-[10px] font-bold text-red-500">{errors.password.message}</p>}
             </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+                <p className="text-xs font-bold text-red-400">{error}</p>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#FF5A00] text-white py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#E65100] disabled:opacity-50 transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#FF5A00]/20 mt-4"
+              disabled={loading || !username || !password}
+              className="w-full bg-[#FF5A00] text-white py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[#E65100] disabled:opacity-40 transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#FF5A00]/20 mt-2"
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Log In <ArrowRight className="h-4 w-4" /></>}
+              {loading
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Authenticating...</>
+                : <>Enter Panel <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
-
-          <div className="mt-8 pt-6 border-t border-slate-50 text-center">
-            <p className="text-xs text-slate-500 font-medium">
-              New to Nairabulk?{' '}
-              <Link to="/signup" className="text-[#FF5A00] font-bold hover:underline underline-offset-4">
-                Create an account
-              </Link>
-            </p>
-          </div>
         </div>
+
+        <p className="text-center text-[10px] font-bold text-slate-700 uppercase tracking-widest mt-6">
+          Restricted Access · Nairabulk Admin
+        </p>
       </div>
     </div>
   );
