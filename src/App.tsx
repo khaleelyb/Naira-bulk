@@ -13,8 +13,9 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminGuard } from './components/layout/AdminGuard';
 import { AdminOverview } from './components/layout/AdminOverview';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
-import { AdminProducts } from './pages/admin/Adminlayout';        // ← correct named export
-import { AdminUploads } from './pages/admin/Adminuploads';         // ← new
+import { AdminProducts } from './pages/admin/Adminlayout';
+import { AdminUploads } from './pages/admin/Adminuploads';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 import { UserDashboard } from './pages/UserDashboard';
 import { supabase } from './lib/supabase';
 
@@ -28,9 +29,7 @@ export default function App() {
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
@@ -46,44 +45,41 @@ export default function App() {
         <main className="flex-grow">
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<HomePage />} />
+            <Route path="/"           element={<HomePage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
-            <Route path="/import" element={<ImportFromChinaPage />} />
-            <Route path="/track" element={<TrackOrderPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/import"     element={<ImportFromChinaPage />} />
+            <Route path="/track"      element={<TrackOrderPage />} />
+            <Route path="/cart"       element={<CartPage />} />
+            <Route path="/login"      element={<LoginPage />} />
+            <Route path="/signup"     element={<SignupPage />} />
+
+            {/* Admin login — standalone, no Navbar interference */}
+            <Route path="/admin-login" element={<AdminLoginPage />} />
 
             {/* Protected user routes */}
-            <Route
-              path="/dashboard"
-              element={session ? <UserDashboard /> : <Navigate to="/login" />}
-            />
-            <Route
-              path="/dashboard/*"
-              element={session ? <UserDashboard /> : <Navigate to="/login" />}
-            />
+            <Route path="/dashboard"   element={session ? <UserDashboard /> : <Navigate to="/login" />} />
+            <Route path="/dashboard/*" element={session ? <UserDashboard /> : <Navigate to="/login" />} />
 
-            {/* Admin routes — role-gated */}
+            {/* Admin routes — guarded by sessionStorage flag */}
             <Route
               path="/admin"
               element={
-                <AdminGuard session={session}>
+                <AdminGuard>
                   <AdminLayout />
                 </AdminGuard>
               }
             >
-              <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview"     element={<AdminOverview />} />
-              <Route path="china-orders" element={<AdminChinaOrders />} />
-              <Route path="products"     element={<AdminProducts />} />
-              <Route path="uploads"      element={<AdminUploads />} />   {/* ← new */}
+              <Route index                element={<Navigate to="overview" replace />} />
+              <Route path="overview"      element={<AdminOverview />} />
+              <Route path="china-orders"  element={<AdminChinaOrders />} />
+              <Route path="products"      element={<AdminProducts />} />
+              <Route path="uploads"       element={<AdminUploads />} />
             </Route>
 
-            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+
         <footer className="bg-neutral-900 text-white py-12 px-4 mt-auto">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
@@ -120,6 +116,7 @@ export default function App() {
             © 2024 Nairabulk. All rights reserved.
           </div>
         </footer>
+
         <Toaster position="top-center" expand={true} richColors />
       </div>
     </BrowserRouter>
