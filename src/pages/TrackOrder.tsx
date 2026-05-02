@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Package, MapPin, Calendar, Clock, ArrowRight, CheckCircle2, ChevronRight, MessageCircle } from 'lucide-react';
+import { Search, Package, MapPin, Calendar, Clock, ArrowRight, CheckCircle2, ChevronRight, MessageCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ChinaOrder, ChinaOrderStatus } from '../types';
 import { formatPrice, getWhatsAppLink } from '../lib/utils';
@@ -17,19 +18,30 @@ const STATUS_STEPS: ChinaOrderStatus[] = [
 ];
 
 export function TrackOrderPage() {
-  const [orderId, setOrderId] = useState('');
+  const [searchParams] = useSearchParams();
+  const [orderId, setOrderId] = useState(searchParams.get('id') || '');
   const [order, setOrder] = useState<ChinaOrder | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchInitiated, setSearchInitiated] = useState(false);
 
+  // Auto-fetch if id is in URL
+  useEffect(() => {
+    const idFromUrl = searchParams.get('id');
+    if (idFromUrl) {
+      setOrderId(idFromUrl);
+      fetchOrder(idFromUrl);
+    }
+  }, [searchParams]);
+
   const fetchOrder = async (id: string) => {
+    if (!id.trim()) return;
     setLoading(true);
     setSearchInitiated(true);
     try {
       const { data, error } = await supabase
         .from('china_orders')
         .select('*')
-        .eq('id', id)
+        .eq('id', id.trim())
         .single();
       
       if (error) throw error;
@@ -65,6 +77,7 @@ export function TrackOrderPage() {
               className="w-full border-none bg-transparent py-4 pl-12 pr-4 text-sm font-medium focus:ring-0 text-slate-900"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchOrder(orderId)}
             />
           </div>
           <button 
@@ -199,7 +212,7 @@ export function TrackOrderPage() {
                         </div>
                       </div>
                       {order.status === 'Quoted' || order.status === 'Awaiting Payment' ? (
-                        <button className="w-full py-4.5 bg-[#FF5A00] text-white font-bold rounded-full hover:bg-[#E65100] shadow-lg shadow-[#FF5A00]/20 transition-all uppercase tracking-[0.2em] text-[10px]">
+                        <button className="w-full py-4 bg-[#FF5A00] text-white font-bold rounded-full hover:bg-[#E65100] shadow-lg shadow-[#FF5A00]/20 transition-all uppercase tracking-[0.2em] text-[10px]">
                           Complete Payment
                         </button>
                       ) : (
