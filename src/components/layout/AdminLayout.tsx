@@ -1,12 +1,13 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Globe, Package, LogOut } from 'lucide-react';
+import { LayoutDashboard, Globe, Package, LogOut, HardDrive } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 
 const ADMIN_NAV = [
-  { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
-  { label: 'China Orders', path: '/admin/china-orders', icon: Globe },
-  { label: 'Products', path: '/admin/products', icon: Package },
+  { label: 'Overview',     path: '/admin/overview',      icon: LayoutDashboard },
+  { label: 'China Orders', path: '/admin/china-orders',  icon: Globe },
+  { label: 'Products',     path: '/admin/products',      icon: Package },
+  { label: 'Media Vault',  path: '/admin/uploads',       icon: HardDrive },
 ];
 
 export function AdminLayout() {
@@ -34,7 +35,7 @@ export function AdminLayout() {
                 className={cn(
                   "flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 group",
                   active
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10" 
+                    ? "bg-slate-900 text-white shadow-lg shadow-slate-900/10"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 )}
               >
@@ -49,7 +50,7 @@ export function AdminLayout() {
         </nav>
 
         <div className="p-8 border-t border-slate-100">
-          <button 
+          <button
             onClick={() => supabase.auth.signOut()}
             className="flex items-center gap-4 text-slate-400 hover:text-red-500 transition-all px-5 py-3 rounded-2xl hover:bg-red-50 w-full group"
           >
