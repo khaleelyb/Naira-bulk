@@ -13,7 +13,8 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminGuard } from './components/layout/AdminGuard';
 import { AdminOverview } from './components/layout/AdminOverview';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
-import { AdminProducts } from './pages/admin/Adminlayout';
+import { AdminProducts } from './pages/admin/Adminlayout';        // ← correct named export
+import { AdminUploads } from './pages/admin/Adminuploads';         // ← new
 import { UserDashboard } from './pages/UserDashboard';
 import { supabase } from './lib/supabase';
 
@@ -73,9 +74,10 @@ export default function App() {
               }
             >
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<AdminOverview />} />
+              <Route path="overview"     element={<AdminOverview />} />
               <Route path="china-orders" element={<AdminChinaOrders />} />
-              <Route path="products" element={<AdminProducts />} />
+              <Route path="products"     element={<AdminProducts />} />
+              <Route path="uploads"      element={<AdminUploads />} />   {/* ← new */}
             </Route>
 
             {/* Catch-all */}
