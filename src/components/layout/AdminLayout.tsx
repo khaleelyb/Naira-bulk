@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Globe, Package, Users, Settings, LogOut, BarChart } from 'lucide-react';
+import { LayoutDashboard, Globe, Package, LogOut } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 
@@ -7,8 +7,6 @@ const ADMIN_NAV = [
   { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
   { label: 'China Orders', path: '/admin/china-orders', icon: Globe },
   { label: 'Products', path: '/admin/products', icon: Package },
-  { label: 'Analytics', path: '/admin/analytics', icon: BarChart },
-  { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 
 export function AdminLayout() {
