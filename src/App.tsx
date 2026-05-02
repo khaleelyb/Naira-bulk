@@ -11,6 +11,7 @@ import { ProductDetailsPage } from './pages/ProductDetails';
 import { CartPage } from './pages/CartPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
+import { AdminProducts } from './pages/admin/Products';
 import { UserDashboard } from './pages/UserDashboard';
 import { supabase } from './lib/supabase';
 
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/admin" element={session ? <AdminLayout /> : <Navigate to="/login" />}>
               <Route index element={<Navigate to="china-orders" />} />
               <Route path="china-orders" element={<AdminChinaOrders />} />
+              <Route path="products" element={<AdminProducts />} />
             </Route>
           </Routes>
         </main>
