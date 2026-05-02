@@ -11,7 +11,7 @@ import { ProductDetailsPage } from './pages/ProductDetails';
 import { CartPage } from './pages/CartPage';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { AdminChinaOrders } from './pages/admin/ChinaOrders';
-import { AdminProducts } from './pages/admin/Products';
+import { AdminProducts } from './pages/admin/Adminlayout';
 import { UserDashboard } from './pages/UserDashboard';
 import { supabase } from './lib/supabase';
 
