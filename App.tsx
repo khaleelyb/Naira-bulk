@@ -7,7 +7,7 @@ import ConfirmationPage from './components/ConfirmationPage';
 import Footer from './components/Footer';
 import AdminPage from './components/AdminPage';
 import LoginPage from './components/LoginPage';
-import { createOrder, getServiceStatus, setServiceStatus } from './services/blobService';
+import { createOrder, getServiceStatus, setServiceStatus } from './services/dbService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.HOME);
