@@ -1,0 +1,5 @@
+{
+  "name": "NairaBulk - Simple Order Form",
+  "description": "A simple, mobile-friendly website that allows users from Nigeria to submit orders from Temu and AliExpress by uploading a cart screenshot and filling out a form.",
+  "requestFramePermissions": []
+}
