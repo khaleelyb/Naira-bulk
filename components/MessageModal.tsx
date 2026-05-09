@@ -39,7 +39,7 @@ export const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, pro
               <textarea 
                 id="message" 
                 rows={5} 
-                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-gray-200" 
+                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-gray-900 dark:text-gray-200" 
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               ></textarea>
@@ -47,7 +47,7 @@ export const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose, pro
             <div className="flex justify-end">
               <button 
                 onClick={handleSend} 
-                className="bg-orange-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                className="bg-green-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
                 Send Message
               </button>
