@@ -57,9 +57,9 @@ export const ShopListPage: React.FC<ShopListPageProps> = ({ category, products, 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="bg-gradient-to-br from-orange-500 via-orange-500 to-amber-400 text-white">
+      <div className="bg-gradient-to-br from-green-500 via-green-500 to-amber-400 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-orange-100 hover:text-white mb-5 text-sm font-medium transition-colors">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-green-100 hover:text-white mb-5 text-sm font-medium transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
             All Categories
           </button>
@@ -67,7 +67,7 @@ export const ShopListPage: React.FC<ShopListPageProps> = ({ category, products, 
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-3xl shadow-lg">{emoji}</div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{category}</h1>
-              <p className="text-orange-100 mt-0.5 text-sm">
+              <p className="text-green-100 mt-0.5 text-sm">
                 {sellers.length} {sellers.length === 1 ? 'seller' : 'sellers'} · {products.filter(p => p.category === category).length} listings
               </p>
             </div>
@@ -90,16 +90,16 @@ export const ShopListPage: React.FC<ShopListPageProps> = ({ category, products, 
                 const stats = getStats(seller.id);
                 return (
                   <button key={seller.id} onClick={() => onSelectShop(seller)}
-                    className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-orange-200 dark:hover:border-orange-800/60 overflow-hidden hover:shadow-xl hover:shadow-orange-50 dark:hover:shadow-orange-900/10 transition-all duration-300 hover:-translate-y-0.5 text-left"
+                    className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800/60 overflow-hidden hover:shadow-xl hover:shadow-green-50 dark:hover:shadow-green-900/10 transition-all duration-300 hover:-translate-y-0.5 text-left"
                   >
-                    <div className="relative h-32 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+                    <div className="relative h-32 bg-gradient-to-br from-green-50 to-amber-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                       {stats.thumbnail
                         ? <img src={stats.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80" />
                         : <div className="flex items-center justify-center h-full"><span className="text-4xl opacity-30">{emoji}</span></div>
                       }
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                       <div className="absolute bottom-2 right-2">
-                        <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.count} {stats.count === 1 ? 'item' : 'items'}</span>
+                        <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{stats.count} {stats.count === 1 ? 'item' : 'items'}</span>
                       </div>
                     </div>
                     <div className="p-4">
@@ -118,13 +118,13 @@ export const ShopListPage: React.FC<ShopListPageProps> = ({ category, products, 
   </p>
 )}
                         </div>
-                        <div className="text-gray-300 dark:text-gray-600 group-hover:text-orange-400 transition-colors flex-shrink-0">
+                        <div className="text-gray-300 dark:text-gray-600 group-hover:text-green-400 transition-colors flex-shrink-0">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
                         </div>
                       </div>
                       <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800">
                         <p className="text-xs text-gray-400 dark:text-gray-500">Price range</p>
-                        <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-0.5">
+                        <p className="text-sm font-bold text-green-600 dark:text-green-400 mt-0.5">
                           ₦{stats.minPrice.toLocaleString()}{stats.maxPrice !== stats.minPrice && ` – ₦${stats.maxPrice.toLocaleString()}`}
                         </p>
                       </div>
