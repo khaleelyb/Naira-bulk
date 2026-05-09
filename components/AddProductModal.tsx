@@ -202,7 +202,7 @@ const ChipGroup: React.FC<{
           key={val}
           type="button"
           onClick={() => onSelect(val)}
-          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:border-orange-300 active:scale-95 transition-all duration-150"
+          className="text-xs font-medium px-2.5 py-1 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/50 hover:bg-green-100 dark:hover:bg-green-900/40 hover:border-green-300 active:scale-95 transition-all duration-150"
         >
           {val}
         </button>
@@ -412,9 +412,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <button
                   onClick={() => cameraInputRef.current?.click()}
                   disabled={isProcessing}
-                  className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors group disabled:opacity-50"
+                  className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:bg-green-50 dark:hover:bg-gray-700 transition-colors group disabled:opacity-50"
                 >
-                  <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4 text-orange-600 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4 text-green-600 group-hover:scale-110 transition-transform">
                     <Icon name="camera" className="w-8 h-8" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Take a Photo</h3>
@@ -484,11 +484,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   ))}
                   {images.length < 3 && (
                     <div
-                      className="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:text-orange-500 hover:border-orange-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      className="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:text-green-500 hover:border-green-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                       onClick={() => setMode('select-method')}
                     >
                       {isProcessing ? (
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600" />
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600" />
                       ) : (
                         <>
                           <Icon name="plus" className="w-6 h-6 mb-1" />
@@ -510,7 +510,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   id="title"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-gray-200"
+                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-gray-900 dark:text-gray-200"
                   required
                   placeholder="What are you selling?"
                 />
@@ -526,7 +526,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     id="category"
                     value={category}
                     onChange={e => setCategory(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-gray-200"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-gray-900 dark:text-gray-200"
                   >
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
@@ -540,7 +540,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     id="price"
                     value={price}
                     onChange={e => setPrice(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-gray-200"
+                    className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-gray-900 dark:text-gray-200"
                     required
                     placeholder="0.00"
                   />
@@ -549,21 +549,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
               {/* ── Quick-Tap Spec Chips ── */}
               {hasChips && (
-                <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/40 rounded-xl p-3">
+                <div className="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/40 rounded-xl p-3">
                   <button
                     type="button"
                     onClick={() => setShowChips(v => !v)}
                     className="w-full flex items-center justify-between mb-2"
                   >
                     <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
                       </svg>
-                      <span className="text-xs font-bold text-orange-600 dark:text-orange-400">Quick fill — tap to add specs</span>
+                      <span className="text-xs font-bold text-green-600 dark:text-green-400">Quick fill — tap to add specs</span>
                     </div>
                     <svg
-                      className={`w-4 h-4 text-orange-400 transition-transform duration-200 ${showChips ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-green-400 transition-transform duration-200 ${showChips ? 'rotate-180' : ''}`}
                       fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -623,7 +623,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setDescription(templateData.template)}
-                      className="text-xs text-orange-500 hover:text-orange-600 font-semibold flex items-center gap-1"
+                      className="text-xs text-green-500 hover:text-green-600 font-semibold flex items-center gap-1"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -638,7 +638,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   rows={7}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-gray-900 dark:text-gray-200 font-mono text-sm leading-relaxed"
+                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-gray-900 dark:text-gray-200 font-mono text-sm leading-relaxed"
                   placeholder="Describe your item..."
                   required
                 />
@@ -660,7 +660,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="bg-orange-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                  className="bg-green-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
                   {isEditMode ? 'Save Changes' : 'Post Ad'}
                 </button>
