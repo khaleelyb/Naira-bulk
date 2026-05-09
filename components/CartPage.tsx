@@ -93,7 +93,7 @@ const BuyerForm: React.FC<BuyerFormProps> = ({ currentUser, onSubmit, isLoading 
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{label}</label>
           <input type={type} value={value} onChange={e => { set(e.target.value); setErr(''); }}
             placeholder={ph}
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all"
+            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all"
           />
         </div>
       ))}
@@ -101,12 +101,12 @@ const BuyerForm: React.FC<BuyerFormProps> = ({ currentUser, onSubmit, isLoading 
         <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Delivery Address</label>
         <textarea value={address} onChange={e => { setAddress(e.target.value); setErr(''); }}
           placeholder="House number, street, area, city…" rows={2}
-          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all resize-none"
+          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all resize-none"
         />
       </div>
       {err && <p className="text-xs text-red-500">{err}</p>}
       <button type="submit" disabled={isLoading}
-        className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-orange-200 dark:shadow-orange-900/30 text-sm">
+        className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30 text-sm">
         {isLoading ? 'Opening payment…' : 'Confirm & Pay'}
       </button>
     </form>
@@ -322,21 +322,21 @@ export const CartPage: React.FC<CartPageProps> = ({
 
             {/* Order summary strip */}
             {checkoutStep === 'form' && (
-              <div className="mb-4 bg-orange-50 dark:bg-orange-900/10 rounded-xl p-3 space-y-1.5">
+              <div className="mb-4 bg-green-50 dark:bg-green-900/10 rounded-xl p-3 space-y-1.5">
                 {sellerGroups.map(g => (
                   <div key={g.sellerId} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-[10px] font-bold text-orange-700 dark:text-orange-300">
+                      <div className="w-5 h-5 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center text-[10px] font-bold text-green-700 dark:text-green-300">
                         {g.items.length}
                       </div>
                       <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[160px]">{g.sellerName}</span>
                     </div>
-                    <span className="font-bold text-orange-600 dark:text-orange-400">₦{g.total.toLocaleString()}</span>
+                    <span className="font-bold text-green-600 dark:text-green-400">₦{g.total.toLocaleString()}</span>
                   </div>
                 ))}
-                <div className="border-t border-orange-100 dark:border-orange-800/40 pt-1.5 flex justify-between text-sm font-bold">
+                <div className="border-t border-green-100 dark:border-green-800/40 pt-1.5 flex justify-between text-sm font-bold">
                   <span className="text-gray-800 dark:text-gray-200">Total</span>
-                  <span className="text-orange-600 dark:text-orange-400">₦{total.toLocaleString()}</span>
+                  <span className="text-green-600 dark:text-green-400">₦{total.toLocaleString()}</span>
                 </div>
                 {sellerGroups.length > 1 && (
                   <p className="text-[11px] text-gray-400 pt-0.5">
@@ -360,7 +360,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                     {pendingGroups.map((g, i) => (
                       <div key={g.sellerId} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                         i < completedCount  ? 'bg-green-500 text-white' :
-                        i === currentGroupIdx ? 'bg-orange-500 text-white ring-4 ring-orange-200 dark:ring-orange-900/50' :
+                        i === currentGroupIdx ? 'bg-green-500 text-white ring-4 ring-green-200 dark:ring-green-900/50' :
                         'bg-gray-100 dark:bg-gray-800 text-gray-400'
                       }`}>
                         {i < completedCount
@@ -370,8 +370,8 @@ export const CartPage: React.FC<CartPageProps> = ({
                     ))}
                   </div>
                 )}
-                <div className="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-orange-500" />
+                <div className="w-14 h-14 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-green-500" />
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-gray-800 dark:text-gray-200">
@@ -381,7 +381,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                   </p>
                   <p className="text-sm text-gray-400 mt-1">Complete your payment in the KoraPay window</p>
                   {pendingGroups.length > 1 && pendingGroups[currentGroupIdx] && (
-                    <p className="text-xs text-orange-500 mt-1 font-medium">
+                    <p className="text-xs text-green-500 mt-1 font-medium">
                       Paying: {pendingGroups[currentGroupIdx].sellerName} · ₦{pendingGroups[currentGroupIdx].total.toLocaleString()}
                     </p>
                   )}
@@ -437,7 +437,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                       runNextGroup(currentGroupIdx, buyerDetails);
                     }
                   }}
-                    className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">
+                    className="px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors">
                     Retry
                   </button>
                 </div>
@@ -466,7 +466,7 @@ export const CartPage: React.FC<CartPageProps> = ({
           </svg>
           Cart
           {cartItems.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
               {cartItems.reduce((s, i) => s + i.quantity, 0)}
             </span>
           )}
@@ -500,13 +500,13 @@ export const CartPage: React.FC<CartPageProps> = ({
                     {/* Seller header */}
                     <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
                         </svg>
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{group.sellerName}</span>
                         <span className="text-xs text-gray-400">· {group.items.length} item{group.items.length > 1 ? 's' : ''}</span>
                       </div>
-                      <span className="text-xs font-bold text-orange-500">₦{group.total.toLocaleString()}</span>
+                      <span className="text-xs font-bold text-green-500">₦{group.total.toLocaleString()}</span>
                     </div>
 
                     {/* Items */}
@@ -568,7 +568,7 @@ export const CartPage: React.FC<CartPageProps> = ({
 
                 <div className="border-t border-gray-100 dark:border-gray-800 pt-4 flex items-center justify-between mb-5">
                   <span className="font-bold text-gray-900 dark:text-white text-base">Total</span>
-                  <span className="font-bold text-orange-500 text-xl">₦{total.toLocaleString()}</span>
+                  <span className="font-bold text-green-500 text-xl">₦{total.toLocaleString()}</span>
                 </div>
 
                 {/* PAY ALL button */}
@@ -608,7 +608,7 @@ export const CartPage: React.FC<CartPageProps> = ({
         <>
           {ordersLoading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
@@ -626,7 +626,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                       <p className="text-xs text-gray-400 mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex-shrink-0 text-right">
-                      <p className="font-bold text-orange-500 text-base">₦{order.amount.toLocaleString()}</p>
+                      <p className="font-bold text-green-500 text-base">₦{order.amount.toLocaleString()}</p>
                       <div className="mt-1"><StatusBadge status={order.status} /></div>
                     </div>
                   </div>
@@ -643,7 +643,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                         <React.Fragment key={s}>
                           <div className="flex flex-col items-center gap-1">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                              isDone ? isCurrent ? 'bg-orange-500 ring-2 ring-orange-200 dark:ring-orange-900/50' : 'bg-green-500' : 'bg-gray-100 dark:bg-gray-800'
+                              isDone ? isCurrent ? 'bg-green-500 ring-2 ring-green-200 dark:ring-green-900/50' : 'bg-green-500' : 'bg-gray-100 dark:bg-gray-800'
                             }`}>
                               {isDone && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>}
                             </div>
