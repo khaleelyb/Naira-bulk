@@ -14,7 +14,7 @@ interface ChatViewProps {
 
 const ChatBubble: React.FC<{ message: string; isCurrentUser: boolean; }> = ({ message, isCurrentUser }) => {
   const bubbleClasses = isCurrentUser
-    ? 'bg-orange-600 text-white self-end'
+    ? 'bg-green-600 text-white self-end'
     : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 self-start';
   return (
     <div className={`max-w-xs md:max-w-md px-4 py-2 rounded-2xl ${bubbleClasses}`}>
@@ -88,7 +88,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       {/* Header */}
       <header className="flex-shrink-0 bg-white dark:bg-gray-800 shadow-md z-10 sticky top-0">
         <div className="container mx-auto px-4 py-3 flex items-center">
-          <button onClick={onClose} className="text-gray-600 dark:text-gray-300 hover:text-orange-600 mr-3">
+          <button onClick={onClose} className="text-gray-600 dark:text-gray-300 hover:text-green-600 mr-3">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
@@ -123,9 +123,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message..."
-            className="w-full py-2 px-4 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border-2 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full py-2 px-4 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border-2 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
           />
-          <button type="submit" className="bg-orange-600 text-white p-3 rounded-full hover:bg-orange-700 transition-colors flex-shrink-0">
+          <button type="submit" className="bg-green-600 text-white p-3 rounded-full hover:bg-green-700 transition-colors flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
             </svg>
