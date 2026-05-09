@@ -578,7 +578,7 @@ const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-amber-400 animate-pulse shadow-lg shadow-green-200 dark:shadow-green-900/40" />
-          <p className="text-sm text-gray-400 font-medium">Loading marketplace…</p>
+          <p className="text-sm text-gray-400 font-medium">Nairabulk…</p>
         </div>
       </div>
     );
