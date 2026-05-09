@@ -44,7 +44,7 @@ export const AuthPrompt: React.FC<AuthPromptProps> = ({ page, onLoginClick }) =>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">{info.message}</p>
                 <button
                     onClick={onLoginClick}
-                    className="bg-orange-600 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-700 transition-transform duration-200 ease-in-out hover:scale-105"
+                    className="bg-green-600 text-white font-semibold px-8 py-3 rounded-full hover:bg-green-700 transition-transform duration-200 ease-in-out hover:scale-105"
                 >
                     Login / Register
                 </button>
