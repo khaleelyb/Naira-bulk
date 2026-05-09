@@ -85,7 +85,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-2">
         <button
           onClick={onClose}
-          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 text-sm font-medium transition-colors"
+          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 text-sm font-medium transition-colors"
         >
           <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -133,7 +133,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   onClick={() => setSelectedImageIndex(idx)}
                   className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                     selectedImageIndex === idx
-                      ? 'border-orange-500 shadow-md shadow-orange-200 dark:shadow-orange-900/40 opacity-100'
+                      ? 'border-green-500 shadow-md shadow-green-200 dark:shadow-green-900/40 opacity-100'
                       : 'border-transparent opacity-60 hover:opacity-90 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
@@ -150,11 +150,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* Left: title + description */}
 <div className="md:col-span-2 space-y-4">
   <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-    <span className="inline-block text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2.5 py-0.5 rounded-full mb-3">
+    <span className="inline-block text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2.5 py-0.5 rounded-full mb-3">
       {product.category}
     </span>
     <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-snug">{product.title}</h1>
-    <p className="text-3xl font-bold text-orange-500 mt-3">₦{product.price.toLocaleString()}</p>
+    <p className="text-3xl font-bold text-green-500 mt-3">₦{product.price.toLocaleString()}</p>
     
     {/* Metadata Section: Location, Date, and ID */}
     <div className="mt-3">
@@ -198,7 +198,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {/* Message on App */}
                 <button
                   onClick={() => onMessageSeller(product)}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-orange-200 dark:shadow-orange-900/30 text-sm"
+                  className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30 text-sm"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -210,7 +210,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {canAddToCart && (
                   <button
                     onClick={() => onAddToCart(product)}
-                    className="w-full flex items-center justify-center gap-2 bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-200 dark:hover:bg-orange-900/50 text-orange-700 dark:text-orange-300 font-bold py-3 rounded-xl transition-colors text-sm border border-orange-200 dark:border-orange-800"
+                    className="w-full flex items-center justify-center gap-2 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-700 dark:text-green-300 font-bold py-3 rounded-xl transition-colors text-sm border border-green-200 dark:border-green-800"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
@@ -252,8 +252,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   onClick={onToggleSave}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
                     isSaved
-                      ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-500'
-                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-orange-200 hover:text-orange-500'
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-500'
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-green-200 hover:text-green-500'
                   }`}
                 >
                   <svg viewBox="0 0 24 24" strokeWidth={2} className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor">
@@ -271,7 +271,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <img
                       src={seller.profilePicture}
                       alt={seller.name}
-                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-orange-50 dark:ring-orange-900/20 flex-shrink-0"
+                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-green-50 dark:ring-green-900/20 flex-shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1 flex-wrap">
