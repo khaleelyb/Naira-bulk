@@ -208,7 +208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </button>
               <div className="w-px h-4 bg-gray-200 dark:bg-gray-700" />
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-red-500 to-green-500 flex items-center justify-center">
                   <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
                 </div>
                 <span className="font-bold text-gray-900 dark:text-white text-sm">Admin Panel</span>
@@ -231,7 +231,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               className={`relative px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.id ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}>
               {t.label}
               {t.badge !== undefined && t.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {t.badge > 9 ? '9+' : t.badge}
                 </span>
               )}
@@ -247,33 +247,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>} />
               <StatCard label="Registered Users" value={users.length} sub="Total accounts" color="bg-green-500 shadow-green-200 dark:shadow-green-900/40"
                 icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>} />
-              <StatCard label="Total Orders" value={orders.length} sub={`${pendingShipment.length} need shipping`} color="bg-orange-500 shadow-orange-200 dark:shadow-orange-900/40"
+              <StatCard label="Total Orders" value={orders.length} sub={`${pendingShipment.length} need shipping`} color="bg-green-500 shadow-green-200 dark:shadow-green-900/40"
                 icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>} />
               <StatCard label="Revenue" value={`₦${totalRevenue.toLocaleString()}`} sub="From paid orders" color="bg-emerald-500 shadow-emerald-200 dark:shadow-emerald-900/40"
                 icon={<svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /></svg>} />
             </div>
 
             {pendingShipment.length > 0 && (
-              <div className="flex items-center justify-between gap-4 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/50 rounded-2xl px-5 py-4 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/20 transition-colors"
+              <div className="flex items-center justify-between gap-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/50 rounded-2xl px-5 py-4 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
                 onClick={() => setTab('orders')}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-orange-700 dark:text-orange-400 text-sm">{pendingShipment.length} order{pendingShipment.length !== 1 ? 's' : ''} need{pendingShipment.length === 1 ? 's' : ''} to be shipped</p>
-                    <p className="text-xs text-orange-500">Payment confirmed — tap to view and mark as shipped</p>
+                    <p className="font-bold text-green-700 dark:text-green-400 text-sm">{pendingShipment.length} order{pendingShipment.length !== 1 ? 's' : ''} need{pendingShipment.length === 1 ? 's' : ''} to be shipped</p>
+                    <p className="text-xs text-green-500">Payment confirmed — tap to view and mark as shipped</p>
                   </div>
                 </div>
-                <svg className="w-4 h-4 text-orange-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
               </div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span className="w-2 h-2 bg-orange-500 rounded-full" />Top Sellers</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span className="w-2 h-2 bg-green-500 rounded-full" />Top Sellers</h3>
                 <div className="space-y-3">
                   {topSellers.map(({ user, count }, i) => user && (
                     <div key={user.id} className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                         <p className="text-xs text-gray-400">@{user.username}</p>
                       </div>
-                      <span className="text-xs font-bold bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full">{count} listings</span>
+                      <span className="text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">{count} listings</span>
                     </div>
                   ))}
                   {topSellers.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No sellers yet</p>}
@@ -308,7 +308,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <span className="text-xs font-semibold text-gray-500">{count} ({pct}%)</span>
                         </div>
                         <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                          <div className="h-full bg-gradient-to-r from-green-500 to-amber-400 rounded-full" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     );
@@ -320,7 +320,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 rounded-full" />Recent Orders</h3>
-                <button onClick={() => setTab('orders')} className="text-xs text-orange-500 hover:text-orange-600 font-semibold">View all →</button>
+                <button onClick={() => setTab('orders')} className="text-xs text-green-500 hover:text-green-600 font-semibold">View all →</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -340,7 +340,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
                         </td>
                         <td className="py-2.5 hidden sm:table-cell text-gray-500 dark:text-gray-400 text-xs">{o.buyerName ?? '—'}</td>
-                        <td className="py-2.5 text-right font-semibold text-orange-600 dark:text-orange-400">₦{o.amount.toLocaleString()}</td>
+                        <td className="py-2.5 text-right font-semibold text-green-600 dark:text-green-400">₦{o.amount.toLocaleString()}</td>
                         <td className="py-2.5 text-right"><StatusBadge status={o.status} /></td>
                       </tr>
                     ))}
@@ -361,10 +361,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex-1 relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 <input type="text" placeholder="Search by product, buyer, or reference…" value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
               </div>
               <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value)}
-                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
                 <option value="all">All Statuses</option>
                 <option value="success">Paid</option>
                 <option value="shipped">Shipped</option>
@@ -376,14 +376,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {orderStatusFilter === 'all' && pendingShipment.length > 0 && (
-              <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/40 rounded-xl px-4 py-3 flex items-center gap-3">
-                <svg className="w-5 h-5 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/40 rounded-xl px-4 py-3 flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                 </svg>
-                <p className="text-sm text-orange-700 dark:text-orange-400 font-medium flex-1">
+                <p className="text-sm text-green-700 dark:text-green-400 font-medium flex-1">
                   <strong>{pendingShipment.length}</strong> paid order{pendingShipment.length !== 1 ? 's' : ''} waiting to be shipped.
                 </p>
-                <button onClick={() => setOrderStatusFilter('success')} className="text-xs font-bold text-orange-600 hover:text-orange-700 whitespace-nowrap">Filter →</button>
+                <button onClick={() => setOrderStatusFilter('success')} className="text-xs font-bold text-green-600 hover:text-green-700 whitespace-nowrap">Filter →</button>
               </div>
             )}
 
@@ -415,7 +415,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <p className="font-bold text-gray-900 dark:text-white text-base leading-snug">{o.productTitle}</p>
                                 {product && (
                                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span className="text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
+                                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
                                     <span className="text-xs text-gray-400">#{o.id.slice(0, 8)}</span>
                                   </div>
                                 )}
@@ -423,7 +423,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <StatusBadge status={o.status} />
-                                <p className="font-bold text-orange-600 dark:text-orange-400 text-base">₦{o.amount.toLocaleString()}</p>
+                                <p className="font-bold text-green-600 dark:text-green-400 text-base">₦{o.amount.toLocaleString()}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -431,13 +431,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
                                 <span>{o.buyerName ?? buyer?.name ?? 'Unknown buyer'}</span>
                               </div>
-                              {o.buyerEmail && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><a href={`mailto:${o.buyerEmail}`} className="hover:text-orange-500 transition-colors">{o.buyerEmail}</a></div>}
-                              {o.buyerPhone && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg><a href={`tel:${o.buyerPhone}`} className="hover:text-orange-500 transition-colors">{o.buyerPhone}</a></div>}
+                              {o.buyerEmail && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><a href={`mailto:${o.buyerEmail}`} className="hover:text-green-500 transition-colors">{o.buyerEmail}</a></div>}
+                              {o.buyerPhone && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg><a href={`tel:${o.buyerPhone}`} className="hover:text-green-500 transition-colors">{o.buyerPhone}</a></div>}
                               {o.buyerAddress && <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg><span>{o.buyerAddress}</span></div>}
                             </div>
                             <div className="flex items-center gap-2 mt-3 flex-wrap">
                               {nextStatus && (
-                                <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)} className="text-xs font-bold bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm">{NEXT_LABEL[o.status]}</button>
+                                <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)} className="text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm">{NEXT_LABEL[o.status]}</button>
                               )}
                               <button onClick={() => setExpandedOrderId(isExpanded ? null : o.id)} className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">{isExpanded ? 'Hide details' : 'View details'}</button>
                             </div>
@@ -447,7 +447,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <div className="mt-4 ml-16 bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-2 text-xs">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Order ID</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.id}</p></div>
-                              {o.buyerPhone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p><a href={`tel:${o.buyerPhone}`} className="text-orange-500 hover:text-orange-600 font-medium">{o.buyerPhone}</a></div>}
+                              {o.buyerPhone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p><a href={`tel:${o.buyerPhone}`} className="text-green-500 hover:text-green-600 font-medium">{o.buyerPhone}</a></div>}
                               {o.buyerAddress && <div className="sm:col-span-2"><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Delivery Address</p><p className="text-gray-600 dark:text-gray-300">{o.buyerAddress}</p></div>}
                               {o.korapayReference && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Payment Reference</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.korapayReference}</p></div>}
                               {seller && (
@@ -468,7 +468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     {seller.phone && (
       <a
         href={`tel:${seller.phone}`}
-        className="text-orange-500 hover:text-orange-600 text-xs font-medium mt-1 block"
+        className="text-green-500 hover:text-green-600 text-xs font-medium mt-1 block"
       >
         📞 {seller.phone}
       </a>
@@ -523,7 +523,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <div className="flex flex-wrap gap-2">
                                 {(['pending','processing','success','shipped','delivered','failed'] as Order['status'][]).map(s => (
                                   <button key={s} disabled={o.status === s} onClick={() => onUpdateOrderStatus(o.id, s)}
-                                    className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-300 hover:text-orange-500'}`}>
+                                    className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-300 hover:text-green-500'}`}>
                                     {STATUS_LABELS[s]}
                                   </button>
                                 ))}
@@ -553,10 +553,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex-1 relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 <input type="text" placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
               </div>
               <select value={productCategoryFilter} onChange={e => setProductCategoryFilter(e.target.value)}
-                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
                 <option value="All">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -603,7 +603,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <td className="px-3 py-3 hidden lg:table-cell">
                             <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{p.category}</span>
                           </td>
-                          <td className="px-3 py-3 text-right font-semibold text-orange-600 dark:text-orange-400">₦{p.price.toLocaleString()}</td>
+                          <td className="px-3 py-3 text-right font-semibold text-green-600 dark:text-green-400">₦{p.price.toLocaleString()}</td>
                           {/* ── Edit + Delete buttons ── */}
                           <td className="px-5 py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -644,7 +644,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="relative max-w-sm">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
               <input type="text" placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -669,7 +669,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <p className="font-semibold text-gray-900 dark:text-white text-sm">{u.name}</p>
                             {u.isVerified && <VerifiedBadge />}
                             {boosted && <BoostedBadge />}
-                            {isMe && <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded-md font-medium">You</span>}
+                            {isMe && <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md font-medium">You</span>}
                           </div>
                           <p className="text-xs text-gray-400">@{u.username} · {listingCount} listing{listingCount !== 1 ? 's' : ''}</p>
                           {boosted && u.boostedUntil && (
