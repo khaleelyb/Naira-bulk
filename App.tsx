@@ -849,22 +849,7 @@ case 'cart':
   <>
     <CategoryFilter categories={CATEGORIES} selectedCategory={null} setSelectedCategory={handleSelectCategory} />
 
-    {/* Hero strip */}
-    <div className="bg-gradient-to-r from-orange-500 to-amber-400 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Find great deals in Kano</h2>
-          <p className="text-orange-100 mt-1 text-sm">{products.length.toLocaleString()} active listings from sellers</p>
-        </div>
-        <button
-          onClick={handlePostAdClick}
-          className="flex-shrink-0 bg-white text-orange-600 font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-orange-50 transition-all"
-        >
-          + Post Free Ad
-        </button>
-      </div>
-    </div>
-
+   
    {(() => {
   const boostedUsers = users.filter(isActiveBoosted);
   if (boostedUsers.length === 0) return null;
