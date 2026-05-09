@@ -11,23 +11,23 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#F97316" />
+    <meta name="theme-color" content="#16a34a" />
 
     <!-- ── SEO & Social ── -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kano Stores – Buy & Sell in Kano, Nigeria</title>
-    <meta name="description" content="Browse local listings, message sellers, and shop securely on Kano's #1 marketplace." />
+    <title>NairaBulk – Buy &amp; Sell Nationwide in Nigeria</title>
+    <meta name="description" content="Nigeria's bulk marketplace. Browse listings, message sellers, and shop securely with nationwide delivery." />
 
-    <!-- Open Graph (Facebook, WhatsApp previews) -->
-    <meta property="og:title" content="Kano Stores" />
-    <meta property="og:description" content="Buy and sell anything in Kano, Nigeria." />
+    <!-- Open Graph -->
+    <meta property="og:title" content="NairaBulk" />
+    <meta property="og:description" content="Buy and sell anything in Nigeria. Nationwide delivery." />
     <meta property="og:image" content="/icon-512.png" />
     <meta property="og:type" content="website" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Kano Stores" />
-    <meta name="twitter:description" content="Buy and sell anything in Kano, Nigeria." />
+    <meta name="twitter:title" content="NairaBulk" />
+    <meta name="twitter:description" content="Buy and sell anything in Nigeria. Nationwide delivery." />
     <meta name="twitter:image" content="/icon-512.png" />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,7 +35,6 @@
       tailwind.config = { darkMode: 'class' }
     </script>
     <script>
-      // Apply theme before React loads to prevent FOUC
       (function() {
         const theme = localStorage.getItem('kano-theme') || 'system';
         if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
