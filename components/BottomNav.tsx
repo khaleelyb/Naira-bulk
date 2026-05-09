@@ -5,7 +5,7 @@ interface BottomNavProps {
   onPostAdClick: () => void;
   activePage: Page;
   setActivePage: (page: Page) => void;
-  cartCount: number; // 👈 added
+  cartCount: number;
 }
 
 const NavBtn: React.FC<{
@@ -20,12 +20,12 @@ const NavBtn: React.FC<{
     <button
       onClick={() => setActivePage(page)}
       className={`flex flex-col items-center justify-center gap-0.5 w-full h-full pt-2 pb-1 transition-all ${
-        active ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+        active ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
       }`}
     >
-      <div className={`relative p-1 rounded-lg transition-all ${active ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}>
+      <div className={`relative p-1 rounded-lg transition-all ${active ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
         {icon}
-        {active && <span className="absolute inset-x-2 -bottom-0.5 h-0.5 bg-orange-500 rounded-full" />}
+        {active && <span className="absolute inset-x-2 -bottom-0.5 h-0.5 bg-green-600 rounded-full" />}
       </div>
       <span className="text-[10px] font-medium tracking-tight">{label}</span>
     </button>
@@ -53,7 +53,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPostAdClick, activePage,
         <div className="w-1/5 flex items-center justify-center">
           <button
             onClick={onPostAdClick}
-            className="absolute -top-5 w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-2xl shadow-lg shadow-orange-300 dark:shadow-orange-900/50 hover:shadow-orange-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center border-4 border-white dark:border-gray-950"
+            className="absolute -top-5 w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-500 text-white rounded-2xl shadow-lg shadow-green-300 dark:shadow-green-900/50 hover:shadow-green-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center border-4 border-white dark:border-gray-950"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -61,12 +61,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPostAdClick, activePage,
           </button>
         </div>
 
-        {/* 👇 Replaced Messages with Cart */}
+        {/* Cart */}
         <div className="w-1/5">
           <button
             onClick={() => setActivePage('cart')}
             className={`relative flex flex-col items-center justify-center gap-0.5 w-full h-full pt-2 pb-1 transition-all ${
-              activePage === 'cart' ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'
+              activePage === 'cart' ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'
             }`}
           >
             <div className="relative p-1">
@@ -74,7 +74,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ onPostAdClick, activePage,
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                   {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
