@@ -356,7 +356,7 @@ const handleSaveBuyerDetails = async (email: string, address: string, phone: str
   // --- PRODUCTS ---
   const handleAddProduct = async (data: Omit<Product, 'id' | 'sellerId' | 'location' | 'date'>) => {
     if (!currentUser) { setAuthModal({ isOpen: true, view: 'login' }); showToast('Please log in to post.'); return; }
-    const p = await db.createProduct({ ...data, sellerId: currentUser.id, location: 'Kano', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) });
+    const p = await db.createProduct({ ...data, sellerId: currentUser.id, location: 'Nationwide', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) });
     if (p) { setProducts(prev => [p, ...prev]); showToast('Ad posted successfully!'); }
     else showToast('Error posting ad.');
   };
