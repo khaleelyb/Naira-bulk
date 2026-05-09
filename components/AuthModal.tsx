@@ -68,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
 
                     {/* Logo + heading */}
                     <div className="flex flex-col items-center mb-6">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center mb-3 shadow-md shadow-orange-200 dark:shadow-orange-900/40">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-amber-400 flex items-center justify-center mb-3 shadow-md shadow-green-200 dark:shadow-green-900/40">
                             <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 9.5L12 3L21 9.5V20C21 20.5523 20.5523 21 20 21H15V15H9V21H4C3.44772 21 3 20.5523 3 20V9.5Z" fill="white"/>
                             </svg>
@@ -89,7 +89,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
                                 {/* Profile picture */}
                                 <div className="flex flex-col items-center space-y-1.5 mb-1">
                                     <label htmlFor="profile-picture-upload" className="cursor-pointer">
-                                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-orange-500 transition-colors">
+                                        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-green-500 transition-colors">
                                             {imagePreview
                                                 ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                                 : <Icon name="camera" className="w-7 h-7 text-gray-400" />
@@ -107,7 +107,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
                                         type="text" id="name" value={name}
                                         onChange={e => setName(e.target.value)}
                                         placeholder="Full name"
-                                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                         required
                                     />
                                 </div>
@@ -121,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
                                 type="text" id="Email" value={username}
                                 onChange={e => setUsername(e.target.value)}
                                 placeholder="Enter your Email"
-                                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                 required
                             />
                         </div>
@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
                                     id="password" value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     placeholder="Enter your password"
-                                    className="w-full pl-3 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                    className="w-full pl-3 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                     required
                                 />
                                 <button
@@ -158,18 +158,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
 
                         {/* PIN hint on login */}
                         {view === 'login' && (
-                            <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/40 rounded-xl px-3 py-2.5">
-                                <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-800/40 rounded-xl px-3 py-2.5">
+                                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                 </svg>
-                                <p className="text-xs text-orange-700 dark:text-orange-400">If you have a PIN set, you'll be asked for it after logging in</p>
                             </div>
                         )}
 
                         <div className="pt-1">
                             <button
                                 type="submit"
-                                className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-md shadow-orange-200 dark:shadow-orange-900/30"
+                                className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30"
                             >
                                 {view === 'login' ? 'Log In' : 'Create Account'}
                             </button>
@@ -181,7 +180,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, 
                             {view === 'login' ? "Don't have an account?" : 'Already have an account?'}
                             <button
                                 onClick={() => { setView(view === 'login' ? 'register' : 'login'); setPassword(''); }}
-                                className="font-semibold text-orange-500 hover:text-orange-600 ml-1"
+                                className="font-semibold text-green-500 hover:text-green-600 ml-1"
                             >
                                 {view === 'login' ? 'Sign up' : 'Log in'}
                             </button>
