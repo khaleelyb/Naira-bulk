@@ -75,7 +75,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products, onMessageSel
             </div>
             <div ref={loaderRef} className="h-20 flex justify-center items-center">
               {hasMore && (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" aria-label="Loading more products"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" aria-label="Loading more products"></div>
               )}
             </div>
           </>
