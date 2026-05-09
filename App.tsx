@@ -577,7 +577,7 @@ const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 animate-pulse shadow-lg shadow-orange-200 dark:shadow-orange-900/40" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-amber-400 animate-pulse shadow-lg shadow-green-200 dark:shadow-green-900/40" />
           <p className="text-sm text-gray-400 font-medium">Loading marketplace…</p>
         </div>
       </div>
@@ -725,7 +725,7 @@ case 'cart':
               {filteredSellers.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
                     </svg>
                     Shops
@@ -749,17 +749,17 @@ case 'cart':
                               window.history.pushState({ view: 'shop', sellerId: seller.id, category: firstCategory, page: 'home' }, '', `#shop=${seller.id}`);
                             }
                           }}
-                          className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-orange-200 dark:hover:border-orange-800/60 overflow-hidden hover:shadow-xl hover:shadow-orange-50 dark:hover:shadow-orange-900/10 transition-all duration-300 hover:-translate-y-0.5 text-left"
+                          className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800/60 overflow-hidden hover:shadow-xl hover:shadow-green-50 dark:hover:shadow-green-900/10 transition-all duration-300 hover:-translate-y-0.5 text-left"
                         >
                           {/* Banner / thumbnail */}
-                          <div className="relative h-24 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
+                          <div className="relative h-24 bg-gradient-to-br from-green-50 to-amber-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
                             {thumbnail
                               ? <img src={thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-70" />
                               : <div className="flex items-center justify-center h-full text-3xl opacity-20">🏪</div>
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                             <div className="absolute bottom-2 right-2">
-                              <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                              <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                 {sellerProducts.length} listing{sellerProducts.length !== 1 ? 's' : ''}
                               </span>
                             </div>
@@ -790,7 +790,7 @@ case 'cart':
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{seller.bio}</p>
                               )}
                             </div>
-                            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-orange-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-green-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                             </svg>
                           </div>
@@ -805,7 +805,7 @@ case 'cart':
               {filteredProducts.length > 0 && (
                 <>
                   <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
                     </svg>
                     Products
@@ -907,7 +907,7 @@ const sellerProducts = sellerAllProducts.filter(p => p.category === pickedCatego
                     </div>
                     <p className="text-xs text-gray-400">
   @{seller.username} · 
-  <span className="text-orange-500 font-semibold ml-1">{pickedCategory}</span>
+  <span className="text-green-500 font-semibold ml-1">{pickedCategory}</span>
 </p>
                     {seller.bio && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{seller.bio}</p>}
                   </div>
@@ -958,7 +958,7 @@ const sellerProducts = sellerAllProducts.filter(p => p.category === pickedCatego
                           {/* Save button */}
                           <button
                             onClick={e => { e.stopPropagation(); handleToggleSave(product.id); }}
-                            className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center shadow transition-all ${isSaved ? 'bg-orange-500 text-white' : 'bg-white/90 text-gray-400 hover:text-orange-500'}`}
+                            className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center shadow transition-all ${isSaved ? 'bg-green-500 text-white' : 'bg-white/90 text-gray-400 hover:text-green-500'}`}
                           >
                             <svg className="w-3 h-3" viewBox="0 0 24 24" strokeWidth={2} fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
@@ -967,7 +967,7 @@ const sellerProducts = sellerAllProducts.filter(p => p.category === pickedCatego
                         </button>
                         <button onClick={() => handleSelectProduct(product)} className="block p-2 text-left w-full">
                           <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 line-clamp-1 leading-snug">{product.title}</p>
-                          <p className="text-sm font-bold text-orange-500 mt-0.5">₦{product.price.toLocaleString()}</p>
+                          <p className="text-sm font-bold text-green-500 mt-0.5">₦{product.price.toLocaleString()}</p>
                         </button>
                       </div>
                     );
