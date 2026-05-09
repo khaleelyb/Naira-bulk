@@ -21,7 +21,11 @@ const FAQ = [
   },
   {
     q: 'How does payment work?',
-    a: 'Payments are processed securely through Payment Gateway. After paying, the seller will be notified and will arrange delivery to your provided address.',
+    a: 'Payments are processed securely through our Payment Gateway. After paying, the seller will be notified and will arrange delivery to your provided address anywhere in Nigeria.',
+  },
+  {
+    q: 'Do you deliver nationwide?',
+    a: 'Yes! NairaBulk supports nationwide delivery across all states in Nigeria. Delivery terms and timelines are agreed between you and the seller.',
   },
   {
     q: 'Best camera settings for product upload',
@@ -40,7 +44,7 @@ const FAQ = [
 export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onShowPrivacy, onShowTerms }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const waMessage = encodeURIComponent('Hi, I need help with Kano Market.');
+  const waMessage = encodeURIComponent('Hi, I need help with NairaBulk.');
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -50,7 +54,7 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
         <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 text-gray-400 hover:text-green-500 dark:hover:text-green-400 text-sm font-medium transition-colors"
           >
             <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -65,14 +69,14 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-orange-500 to-amber-400 rounded-2xl p-6 text-white">
+        <div className="bg-gradient-to-br from-green-600 to-emerald-500 rounded-2xl p-6 text-white">
           <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center mb-4">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
             </svg>
           </div>
           <h2 className="text-xl font-bold mb-1">We're here to help</h2>
-          <p className="text-orange-100 text-sm leading-relaxed">
+          <p className="text-green-100 text-sm leading-relaxed">
             Browse the FAQs below or reach out to our admin team directly. We typically respond within a few hours.
           </p>
         </div>
@@ -99,14 +103,14 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
               <p className="text-sm font-semibold text-gray-900 dark:text-white">WhatsApp Admin</p>
               <p className="text-xs text-gray-400 mt-0.5">{ADMIN_WHATSAPP_DISPLAY}</p>
             </div>
-            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-orange-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-green-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </a>
 
           {/* Email */}
           <a
-            href={`mailto:${ADMIN_EMAIL}?subject=Kano Market Support`}
+            href={`mailto:${ADMIN_EMAIL}?subject=NairaBulk Support`}
             className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
@@ -118,7 +122,7 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Email Support</p>
               <p className="text-xs text-gray-400 mt-0.5">{ADMIN_EMAIL}</p>
             </div>
-            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-orange-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-green-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </a>
@@ -171,7 +175,7 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
                   </svg>
                 </div>
                 <span className="flex-1 text-left text-sm font-semibold text-gray-900 dark:text-white">Privacy Policy</span>
-                <svg className="w-4 h-4 text-gray-300 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <svg className="w-4 h-4 text-gray-300 group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
@@ -181,13 +185,13 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
                 onClick={onShowTerms}
                 className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
               >
-                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                   </svg>
                 </div>
                 <span className="flex-1 text-left text-sm font-semibold text-gray-900 dark:text-white">Terms of Service</span>
-                <svg className="w-4 h-4 text-gray-300 group-hover:text-orange-400 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <svg className="w-4 h-4 text-gray-300 group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
@@ -195,9 +199,8 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onClose, onSho
           </div>
         )}
 
-        {/* Footer note */}
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 pb-4">
-          Kano Stores · © {new Date().getFullYear()} · All rights reserved
+          NairaBulk · © {new Date().getFullYear()} · All rights reserved
         </p>
       </div>
     </div>
