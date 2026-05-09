@@ -93,7 +93,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <img
                 src={newImagePreview || currentUser.profilePicture}
                 alt={currentUser.name}
-                className="w-24 h-24 rounded-2xl object-cover shadow-lg ring-4 ring-orange-50 dark:ring-orange-900/20"
+                className="w-24 h-24 rounded-2xl object-cover shadow-lg ring-4 ring-green-50 dark:ring-green-900/20"
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -108,7 +108,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <div className="flex items-center gap-2 mb-3">
                 <button
                   onClick={() => { onUpdateProfilePicture(newImagePreview); setNewImagePreview(null); }}
-                  className="bg-orange-500 text-white text-sm font-semibold px-4 py-1.5 rounded-xl hover:bg-orange-600 transition-colors"
+                  className="bg-green-500 text-white text-sm font-semibold px-4 py-1.5 rounded-xl hover:bg-green-600 transition-colors"
                 >
                   Save Photo
                 </button>
@@ -133,7 +133,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <p className="text-xs text-gray-400">Listings</p>
               </div>
               {currentUser.isAdmin && (
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md shadow-orange-200 dark:shadow-orange-900/40">
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md shadow-green-200 dark:shadow-green-900/40">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                   </svg>
@@ -153,7 +153,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             onClick={() => setActivePage('admin')}
             className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white rounded-2xl hover:from-gray-800 hover:to-gray-700 transition-all shadow-lg group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-red-300 dark:shadow-red-900/50">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-red-300 dark:shadow-red-900/50">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
               </svg>
@@ -188,8 +188,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             onClick={onSetPin}
             className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
           >
-            <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <div className="w-8 h-8 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
               </svg>
             </div>
@@ -254,14 +254,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         <div className="flex items-center justify-center gap-4 pt-2 pb-4">
           <button
             onClick={() => setShowPrivacy(true)}
-            className="text-xs text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+            className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors"
           >
             Privacy Policy
           </button>
           <span className="text-gray-200 dark:text-gray-700">·</span>
           <button
             onClick={() => setShowTerms(true)}
-            className="text-xs text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+            className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors"
           >
             Terms of Service
           </button>
