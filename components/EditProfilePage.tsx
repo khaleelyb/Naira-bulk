@@ -29,7 +29,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
                 <div className="flex items-center gap-3 mb-8">
                     <button
                         onClick={onClose}
-                        className="flex items-center gap-1.5 text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 font-medium text-sm transition-colors"
+                        className="flex items-center gap-1.5 text-gray-400 hover:text-green-500 dark:hover:text-green-400 font-medium text-sm transition-colors"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -52,7 +52,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
                                 id="fullName"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                 placeholder="Your full name"
                                 required
                             />
@@ -70,7 +70,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
                                     id="username"
                                     value={username}
                                     onChange={e => setUsername(e.target.value)}
-                                    className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                    className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                     placeholder="yourhandle"
                                     required
                                 />
@@ -94,7 +94,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
                                     id="phone"
                                     value={phone}
                                     onChange={e => setPhone(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
                                     placeholder="+234 800 000 0000"
                                 />
                             </div>
@@ -114,7 +114,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
         onChange={e => setBio(e.target.value)}
         rows={3}
         maxLength={200}
-        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all resize-none"
+        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all resize-none"
         placeholder="Tell buyers about your shop…"
     />
     <p className="mt-1 text-xs text-right text-gray-400">{bio.length}/200</p>
@@ -122,7 +122,7 @@ const [bio, setBio] = useState(currentUser.bio ?? '');
                         <div className="pt-2">
                             <button
                                 type="submit"
-                                className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-orange-200 dark:shadow-orange-900/30"
+                                className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30"
                             >
                                 Save Changes
                             </button>
