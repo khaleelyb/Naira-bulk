@@ -82,6 +82,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
     }
   };
 
+  const isSeller = currentUser.isApprovedSeller && !currentUser.isAdmin;
+  const isAdmin = currentUser.isAdmin;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
@@ -127,19 +130,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
             <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">@{currentUser.username}</p>
 
+            {/* Role badges */}
+            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+              {isAdmin && (
+                <span className="flex items-center gap-1 bg-gradient-to-r from-red-500 to-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                  </svg>
+                  Admin
+                </span>
+              )}
+              {isSeller && (
+                <span className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+                  </svg>
+                  Approved Seller
+                </span>
+              )}
+            </div>
+
             <div className="flex items-center gap-6 mt-4">
               <div className="text-center">
                 <p className="text-xl font-bold text-gray-900 dark:text-white">{userProducts.length}</p>
                 <p className="text-xs text-gray-400">Listings</p>
               </div>
-              {currentUser.isAdmin && (
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-red-500 to-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md shadow-green-200 dark:shadow-green-900/40">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                  </svg>
-                  Admin
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -147,13 +162,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-4">
 
-        {/* Admin Panel Button */}
-        {currentUser.isAdmin && (
+        {/* ── Admin Panel Button (admin only) ── */}
+        {isAdmin && (
           <button
             onClick={() => setActivePage('admin')}
             className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white rounded-2xl hover:from-gray-800 hover:to-gray-700 transition-all shadow-lg group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-red-300 dark:shadow-red-900/50">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-green-500 flex items-center justify-center flex-shrink-0 shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
               </svg>
@@ -163,6 +178,27 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <p className="text-xs text-gray-400">Manage users, products & analytics</p>
             </div>
             <svg className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        )}
+
+        {/* ── Seller Orders Button (approved sellers only, NOT admins) ── */}
+        {isSeller && (
+          <button
+            onClick={() => setActivePage('seller-orders')}
+            className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-2xl hover:from-green-700 hover:to-emerald-600 transition-all shadow-lg shadow-green-200 dark:shadow-green-900/30 group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-bold text-sm">My Store Orders</p>
+              <p className="text-xs text-green-100">View buyer details, confirm deliveries & more</p>
+            </div>
+            <svg className="w-4 h-4 text-green-200 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
@@ -252,17 +288,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
         {/* Privacy & Terms Footer */}
         <div className="flex items-center justify-center gap-4 pt-2 pb-4">
-          <button
-            onClick={() => setShowPrivacy(true)}
-            className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors"
-          >
+          <button onClick={() => setShowPrivacy(true)} className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors">
             Privacy Policy
           </button>
           <span className="text-gray-200 dark:text-gray-700">·</span>
-          <button
-            onClick={() => setShowTerms(true)}
-            className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors"
-          >
+          <button onClick={() => setShowTerms(true)} className="text-xs text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors">
             Terms of Service
           </button>
         </div>
