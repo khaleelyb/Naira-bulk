@@ -707,6 +707,17 @@ case 'cart':
           ? <EditProfilePage currentUser={currentUser} onSaveChanges={handleUpdateProfile} onClose={handleBack} />
           : <AuthPrompt page="edit-profile" onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} />;
 
+        case 'seller-orders':
+  return currentUser
+    ? <SellerOrdersPage
+        currentUser={currentUser}
+        orders={orders}
+        products={products}
+        onBack={handleBack}
+        onUpdateOrderStatus={handleUpdateOrderStatus}
+      />
+    : <AuthPrompt page="profile" onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} />;
+        
       case 'home':
       default:
         // Search results
