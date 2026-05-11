@@ -21,6 +21,8 @@ interface Order {
   buyerAddress: string | null;
   createdAt: string;
   productId: string | null;
+  deliveryOtp: string | null;
+  otpVerified: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -47,6 +49,59 @@ const formatDate = (iso: string) => {
   catch { return iso; }
 };
 
+// ── Delivery OTP display card ─────────────────────────────────────────────────
+const DeliveryOtpCard: React.FC<{ otp: string; isDelivered?: boolean }> = ({ otp, isDelivered }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(otp).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  if (isDelivered) {
+    return (
+      <div className="mt-3 flex items-center gap-2 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800/40 rounded-xl px-3 py-2">
+        <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">Delivery confirmed ✓</span>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+        <p className="text-xs font-bold text-amber-700 dark:text-amber-400">Your Delivery Code</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex gap-1.5 flex-1">
+          {otp.split('').map((digit, i) => (
+            <div key={i} className="flex-1 h-10 bg-white dark:bg-gray-900 border-2 border-amber-300 dark:border-amber-700 rounded-xl flex items-center justify-center">
+              <span className="text-lg font-bold text-amber-700 dark:text-amber-400 tracking-widest">{digit}</span>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={copy}
+          className="flex-shrink-0 flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 px-2.5 py-1.5 rounded-lg transition-colors"
+        >
+          {copied
+            ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg>
+          }
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+      </div>
+      <p className="text-[11px] text-amber-600 dark:text-amber-500 mt-2 leading-relaxed">
+        Share this code with the seller when they deliver your order. They'll use it to confirm delivery.
+      </p>
+    </div>
+  );
+};
+
 interface CartPageProps {
   cartItems: CartItem[];
   onUpdateQuantity: (productId: string, quantity: number) => void;
@@ -55,8 +110,8 @@ interface CartPageProps {
   onSelectProduct: (product: Product) => void;
   currentUser: User | null;
   onLoginClick: () => void;
-  users: User[];                  // ← needed to look up seller names
-  onCartCheckoutSuccess?: () => void; // ← optional: clear cart after payment
+  users: User[];
+  onCartCheckoutSuccess?: () => void;
 }
 
 // ── Buyer details form ────────────────────────────────────────────────────────
@@ -128,10 +183,11 @@ export const CartPage: React.FC<CartPageProps> = ({
   const [currentGroupIdx, setCurrentGroupIdx]   = useState(0);
   const [completedCount, setCompletedCount]     = useState(0);
   const [buyerDetails, setBuyerDetails]         = useState<{ name: string; email: string; phone: string; address: string } | null>(null);
+  // OTP per seller group — index matches pendingGroups
+  const [groupOtps, setGroupOtps]               = useState<string[]>([]);
 
   const total = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
-  // Group cart items by seller
   type SellerGroup = {
     sellerId: string;
     sellerName: string;
@@ -166,23 +222,28 @@ export const CartPage: React.FC<CartPageProps> = ({
     document.body.appendChild(s);
   }, []);
 
+  const loadOrders = () => {
+    if (!currentUser) return;
+    setOrdersLoading(true);
+    supabase.from('orders').select('*').eq('buyer_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setOrders(data.map((o: any) => ({
+            id: o.id, productTitle: o.product_title, amount: o.amount,
+            currency: o.currency ?? 'NGN', status: o.status,
+            buyerName: o.buyer_name ?? null, buyerAddress: o.buyer_address ?? null,
+            createdAt: o.created_at, productId: o.product_id ?? null,
+            deliveryOtp: o.delivery_otp ?? null,
+            otpVerified: o.otp_verified ?? false,
+          })));
+        }
+        setOrdersLoading(false);
+      });
+  };
+
   useEffect(() => {
-    if (activeTab === 'orders' && currentUser) {
-      setOrdersLoading(true);
-      supabase.from('orders').select('*').eq('buyer_id', currentUser.id)
-        .order('created_at', { ascending: false })
-        .then(({ data, error }) => {
-          if (!error && data) {
-            setOrders(data.map((o: any) => ({
-              id: o.id, productTitle: o.product_title, amount: o.amount,
-              currency: o.currency ?? 'NGN', status: o.status,
-              buyerName: o.buyer_name ?? null, buyerAddress: o.buyer_address ?? null,
-              createdAt: o.created_at, productId: o.product_id ?? null,
-            })));
-          }
-          setOrdersLoading(false);
-        });
-    }
+    if (activeTab === 'orders') loadOrders();
   }, [activeTab, currentUser]);
 
   // ── Pay all: step 1 — collect buyer details ───────────────────────────────
@@ -192,14 +253,15 @@ export const CartPage: React.FC<CartPageProps> = ({
     setCurrentGroupIdx(0);
     setCompletedCount(0);
     setBuyerDetails(null);
+    setGroupOtps([]);
     setCheckoutStep('form');
   };
 
-  // ── Pay all: step 2 — process each seller group sequentially ─────────────
+  // ── Pay all: step 2 — process each seller group ───────────────────────────
   const processGroup = async (
     group: SellerGroup,
     details: { name: string; email: string; phone: string; address: string },
-    onDone: () => void,
+    onDone: (otp: string | null) => void,
     onFail: () => void,
   ) => {
     if (!currentUser) return;
@@ -222,7 +284,6 @@ export const CartPage: React.FC<CartPageProps> = ({
 
     if (!result) { onFail(); return; }
 
-    // Wait for Korapay
     let attempts = 0;
     while (!window.Korapay && attempts < 20) {
       await new Promise(r => setTimeout(r, 150));
@@ -240,8 +301,11 @@ export const CartPage: React.FC<CartPageProps> = ({
       onClose: () => { onFail(); },
       onSuccess: async (data: { reference: string }) => {
         const v = await verifyPayment(data.reference);
-        if (v?.status === 'success') onDone();
-        else onFail();
+        if (v?.status === 'success') {
+          onDone(v.deliveryOtp ?? null);
+        } else {
+          onFail();
+        }
       },
       onFailed: () => { onFail(); },
     });
@@ -250,14 +314,16 @@ export const CartPage: React.FC<CartPageProps> = ({
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
     setBuyerDetails(details);
     setCheckoutStep('processing');
-    await runNextGroup(0, details);
+    await runNextGroup(0, details, []);
   };
 
   const runNextGroup = async (
     idx: number,
     details: { name: string; email: string; phone: string; address: string },
+    collectedOtps: string[],
   ) => {
     if (idx >= pendingGroups.length) {
+      setGroupOtps(collectedOtps);
       setCheckoutStep('done');
       onCartCheckoutSuccess?.();
       return;
@@ -267,11 +333,13 @@ export const CartPage: React.FC<CartPageProps> = ({
     processGroup(
       group,
       details,
-      () => {
+      (otp) => {
+        const newOtps = [...collectedOtps, otp ?? ''];
         setCompletedCount(c => c + 1);
-        runNextGroup(idx + 1, details);
+        runNextGroup(idx + 1, details, newOtps);
       },
       () => {
+        setGroupOtps(collectedOtps);
         setCheckoutStep('error');
       },
     );
@@ -283,6 +351,7 @@ export const CartPage: React.FC<CartPageProps> = ({
     setCurrentGroupIdx(0);
     setCompletedCount(0);
     setBuyerDetails(null);
+    setGroupOtps([]);
   };
 
   // ── Checkout overlay ──────────────────────────────────────────────────────
@@ -346,7 +415,6 @@ export const CartPage: React.FC<CartPageProps> = ({
               </div>
             )}
 
-            {/* Form */}
             {checkoutStep === 'form' && currentUser && (
               <BuyerForm currentUser={currentUser} onSubmit={handleBuyerFormSubmit} isLoading={false} />
             )}
@@ -354,7 +422,6 @@ export const CartPage: React.FC<CartPageProps> = ({
             {/* Processing */}
             {checkoutStep === 'processing' && (
               <div className="flex flex-col items-center py-8 gap-4">
-                {/* Progress dots */}
                 {pendingGroups.length > 1 && (
                   <div className="flex gap-2 mb-2">
                     {pendingGroups.map((g, i) => (
@@ -380,18 +447,13 @@ export const CartPage: React.FC<CartPageProps> = ({
                       : 'Opening payment window…'}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">Complete your payment in the KoraPay window</p>
-                  {pendingGroups.length > 1 && pendingGroups[currentGroupIdx] && (
-                    <p className="text-xs text-green-500 mt-1 font-medium">
-                      Paying: {pendingGroups[currentGroupIdx].sellerName} · ₦{pendingGroups[currentGroupIdx].total.toLocaleString()}
-                    </p>
-                  )}
                 </div>
               </div>
             )}
 
-            {/* Done */}
+            {/* Done — show OTP(s) */}
             {checkoutStep === 'done' && (
-              <div className="flex flex-col items-center py-8 gap-4">
+              <div className="flex flex-col items-center py-6 gap-4 w-full">
                 <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
                   <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -401,11 +463,45 @@ export const CartPage: React.FC<CartPageProps> = ({
                   <p className="font-bold text-gray-900 dark:text-white text-lg">
                     {completedCount === 1 ? 'Payment Successful!' : `All ${completedCount} Payments Done!`}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">Your orders have been placed. Sellers will contact you shortly.</p>
+                  <p className="text-sm text-gray-400 mt-1">Your orders have been placed.</p>
                 </div>
-                <button onClick={resetCheckout}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors">
-                  Done
+
+                {/* OTP section */}
+                {groupOtps.some(otp => otp) && (
+                  <div className="w-full space-y-3 mt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Codes</p>
+                      <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mb-3 leading-relaxed">
+                        🔐 <strong>Save these codes!</strong> Share each code with the respective seller when they deliver your order.
+                      </p>
+                      {pendingGroups.map((group, i) => {
+                        const otp = groupOtps[i];
+                        if (!otp) return null;
+                        return (
+                          <div key={group.sellerId} className="mb-3 last:mb-0">
+                            {pendingGroups.length > 1 && (
+                              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">{group.sellerName}</p>
+                            )}
+                            <DeliveryOtpCard otp={otp} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-gray-400 text-center">
+                      These codes are also saved in your Order History tab.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => { resetCheckout(); setActiveTab('orders'); loadOrders(); }}
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors"
+                >
+                  View Orders
                 </button>
               </div>
             )}
@@ -426,6 +522,18 @@ export const CartPage: React.FC<CartPageProps> = ({
                       : 'Something went wrong. Please try again.'}
                   </p>
                 </div>
+                {/* Show any OTPs already collected */}
+                {groupOtps.some(otp => otp) && (
+                  <div className="w-full bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
+                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">Delivery codes for completed payments:</p>
+                    {groupOtps.map((otp, i) => otp ? (
+                      <div key={i} className="mb-2">
+                        {pendingGroups[i] && <p className="text-xs text-gray-500 mb-1">{pendingGroups[i].sellerName}</p>}
+                        <DeliveryOtpCard otp={otp} />
+                      </div>
+                    ) : null)}
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button onClick={resetCheckout}
                     className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -434,7 +542,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                   <button onClick={() => {
                     if (buyerDetails) {
                       setCheckoutStep('processing');
-                      runNextGroup(currentGroupIdx, buyerDetails);
+                      runNextGroup(currentGroupIdx, buyerDetails, groupOtps);
                     }
                   }}
                     className="px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors">
@@ -493,11 +601,9 @@ export const CartPage: React.FC<CartPageProps> = ({
             </div>
           ) : (
             <>
-              {/* Items grouped by seller */}
               <div className="space-y-4 mb-6">
                 {sellerGroups.map(group => (
                   <div key={group.sellerId} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                    {/* Seller header */}
                     <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-2">
                         <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -508,8 +614,6 @@ export const CartPage: React.FC<CartPageProps> = ({
                       </div>
                       <span className="text-xs font-bold text-green-500">₦{group.total.toLocaleString()}</span>
                     </div>
-
-                    {/* Items */}
                     <div className="divide-y divide-gray-50 dark:divide-gray-800">
                       {group.items.map(({ product, quantity }) => (
                         <div key={product.id} className="p-4">
@@ -556,7 +660,6 @@ export const CartPage: React.FC<CartPageProps> = ({
               {/* Summary + Pay All */}
               <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
                 <h2 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-4">Order Summary</h2>
-
                 <div className="space-y-2 mb-4">
                   {sellerGroups.map(g => (
                     <div key={g.sellerId} className="flex justify-between text-sm">
@@ -565,13 +668,10 @@ export const CartPage: React.FC<CartPageProps> = ({
                     </div>
                   ))}
                 </div>
-
                 <div className="border-t border-gray-100 dark:border-gray-800 pt-4 flex items-center justify-between mb-5">
                   <span className="font-bold text-gray-900 dark:text-white text-base">Total</span>
                   <span className="font-bold text-green-500 text-xl">₦{total.toLocaleString()}</span>
                 </div>
-
-                {/* PAY ALL button */}
                 <button
                   onClick={handlePayAll}
                   className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30 text-base"
@@ -586,7 +686,6 @@ export const CartPage: React.FC<CartPageProps> = ({
                     </span>
                   )}
                 </button>
-
                 {sellerGroups.length > 1 && (
                   <p className="text-xs text-gray-400 text-center mt-2">
                     Items from {sellerGroups.length} sellers — you'll complete one payment per seller
@@ -655,6 +754,16 @@ export const CartPage: React.FC<CartPageProps> = ({
                     })}
                   </div>
 
+                  {/* Delivery OTP — shown when order is paid/shipped and not yet delivered */}
+                  {order.deliveryOtp && !order.otpVerified && (order.status === 'success' || order.status === 'shipped') && (
+                    <DeliveryOtpCard otp={order.deliveryOtp} />
+                  )}
+
+                  {/* Confirmed delivery badge */}
+                  {order.otpVerified && (
+                    <DeliveryOtpCard otp="" isDelivered />
+                  )}
+
                   {(order.status === 'failed' || order.status === 'pending' || order.status === 'processing') && (
                     <div className={`mt-3 px-3 py-2 rounded-xl text-xs font-medium ${
                       order.status === 'failed' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400'
@@ -679,7 +788,6 @@ export const CartPage: React.FC<CartPageProps> = ({
         </>
       )}
 
-      {/* Checkout overlay */}
       {renderCheckoutOverlay()}
     </div>
   );
