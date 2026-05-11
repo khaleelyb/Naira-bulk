@@ -1,5 +1,6 @@
 // services/paymentService.ts
 import { supabase } from './supabase_client';
+import { generateDeliveryOtp, storeDeliveryOtp } from './dbService';
 
 export interface InitiatePaymentParams {
   productId: string;
@@ -12,7 +13,6 @@ export interface InitiatePaymentParams {
   buyerAddress: string;
 }
 
-// NEW: multi-item version
 export interface InitiateCartPaymentParams {
   sellerId: string;
   items: { productId: string; productTitle: string; quantity: number; unitPrice: number }[];
@@ -33,7 +33,13 @@ export interface PaymentInitResult {
   productTitle: string;
 }
 
-// Single product payment (used from ProductDetailPage)
+export interface PaymentVerifyResult {
+  status: string;
+  transactionRef?: string;
+  orderId?: string;
+  deliveryOtp?: string;
+}
+
 export const initiatePayment = async (
   params: InitiatePaymentParams
 ): Promise<PaymentInitResult | null> => {
@@ -46,18 +52,14 @@ export const initiatePayment = async (
   } catch (err) { console.error('initiatePayment unexpected error:', err); return null; }
 };
 
-// Multi-item cart payment grouped by seller
 export const initiateCartPayment = async (
   params: InitiateCartPaymentParams
 ): Promise<PaymentInitResult | null> => {
   try {
-    // Build a combined title like "3 items from seller"
     const productTitle = params.items.length === 1
       ? `${params.items[0].productTitle}${params.items[0].quantity > 1 ? ` ×${params.items[0].quantity}` : ''}`
       : `${params.items.length} items (cart order)`;
 
-    // Re-use the same edge function — pass the first productId as the primary
-    // and include itemsJson for the order record
     const { data, error } = await supabase.functions.invoke('korapay-charge', {
       body: {
         productId: params.items[0].productId,
@@ -68,7 +70,6 @@ export const initiateCartPayment = async (
         buyerEmail: params.buyerEmail,
         buyerPhone: params.buyerPhone,
         buyerAddress: params.buyerAddress,
-        // extra metadata stored in the order
         sellerId: params.sellerId,
         cartItems: params.items,
       },
@@ -78,15 +79,31 @@ export const initiateCartPayment = async (
   } catch (err) { console.error('initiateCartPayment unexpected error:', err); return null; }
 };
 
+/**
+ * Verifies a KoraPay payment and — if successful — generates + stores a 6-digit
+ * delivery OTP on the order row.  Returns the OTP so the buyer can see it immediately.
+ */
 export const verifyPayment = async (
   reference: string
-): Promise<{ status: string; transactionRef?: string } | null> => {
+): Promise<PaymentVerifyResult | null> => {
   try {
     const { data, error } = await supabase.functions.invoke('korapay-verify', {
       body: { reference },
     });
     if (error) { console.error('verifyPayment error:', error); return null; }
-    return data;
+
+    const result = data as PaymentVerifyResult;
+
+    // If payment succeeded and we have an orderId, generate + store the delivery OTP
+    if (result?.status === 'success' && result.orderId) {
+      const otp = generateDeliveryOtp();
+      const stored = await storeDeliveryOtp(result.orderId, otp);
+      if (stored) {
+        result.deliveryOtp = otp;
+      }
+    }
+
+    return result;
   } catch (err) { console.error('verifyPayment unexpected error:', err); return null; }
 };
 
