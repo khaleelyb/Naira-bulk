@@ -76,15 +76,10 @@ export const updateUser = async (userId: string, updates: Partial<User>): Promis
     } catch (e) { console.error('updateUser:', e); return false; }
 };
 
-// ── DELETE USER (also cleans up their saved_products rows) ───────────────────
+// ── DELETE USER ───────────────────────────────────────────────────────────────
 export const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-        // 1. Remove saved_products rows for this user (avoids FK constraint errors)
         await supabase.from('saved_products').delete().eq('user_id', userId);
-
-        // 2. Remove any saved_products rows where others saved this user's products
-        //    (handled by ON DELETE CASCADE if set, otherwise manual)
-        // 3. Delete the user row itself
         const { error } = await supabase.from('users').delete().eq('id', userId);
         if (error) throw error;
         return true;
@@ -234,7 +229,30 @@ export interface Order {
   buyerAddress: string | null;
   createdAt: string;
   updatedAt: string;
+  // ── Delivery OTP ──
+  deliveryOtp: string | null;
+  otpVerified: boolean;
 }
+
+const rowToOrder = (o: any): Order => ({
+  id: o.id,
+  buyerId: o.buyer_id ?? null,
+  sellerId: o.seller_id ?? null,
+  productId: o.product_id ?? null,
+  productTitle: o.product_title,
+  amount: o.amount,
+  currency: o.currency ?? 'NGN',
+  status: o.status,
+  korapayReference: o.korapay_reference ?? null,
+  buyerEmail: o.buyer_email ?? null,
+  buyerName: o.buyer_name ?? null,
+  buyerPhone: o.buyer_phone ?? null,
+  buyerAddress: o.buyer_address ?? null,
+  createdAt: o.created_at,
+  updatedAt: o.updated_at,
+  deliveryOtp: o.delivery_otp ?? null,
+  otpVerified: o.otp_verified ?? false,
+});
 
 export const getOrders = async (): Promise<Order[]> => {
   try {
@@ -243,23 +261,7 @@ export const getOrders = async (): Promise<Order[]> => {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data || []).map(o => ({
-      id: o.id,
-      buyerId: o.buyer_id ?? null,
-      sellerId: o.seller_id ?? null,
-      productId: o.product_id ?? null,
-      productTitle: o.product_title,
-      amount: o.amount,
-      currency: o.currency ?? 'NGN',
-      status: o.status,
-      korapayReference: o.korapay_reference ?? null,
-      buyerEmail: o.buyer_email ?? null,
-      buyerName: o.buyer_name ?? null,
-      buyerPhone: o.buyer_phone ?? null,
-      buyerAddress: o.buyer_address ?? null,
-      createdAt: o.created_at,
-      updatedAt: o.updated_at,
-    }));
+    return (data || []).map(rowToOrder);
   } catch (e) { console.error('getOrders:', e); return []; }
 };
 
@@ -277,6 +279,54 @@ export const updateOrderStatus = async (
   } catch (e) { console.error('updateOrderStatus:', e); return false; }
 };
 
+// ── Delivery OTP ──────────────────────────────────────────────────────────────
+
+/** Generates a cryptographically random 6-digit OTP string */
+export const generateDeliveryOtp = (): string => {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return String(arr[0] % 1000000).padStart(6, '0');
+};
+
+/** Stores the delivery OTP on an order row */
+export const storeDeliveryOtp = async (orderId: string, otp: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ delivery_otp: otp, otp_verified: false })
+      .eq('id', orderId);
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error('storeDeliveryOtp:', e); return false; }
+};
+
+/** Verifies the OTP against the DB and marks as verified + delivered if correct */
+export const verifyDeliveryOtp = async (
+  orderId: string,
+  enteredOtp: string
+): Promise<'ok' | 'wrong' | 'error'> => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('delivery_otp, otp_verified')
+      .eq('id', orderId)
+      .single();
+    if (error) throw error;
+    if (!data?.delivery_otp) return 'error';
+    if (data.otp_verified) return 'ok'; // already done
+    if (data.delivery_otp !== enteredOtp) return 'wrong';
+
+    // Mark verified + delivered
+    const { error: updErr } = await supabase
+      .from('orders')
+      .update({ otp_verified: true, status: 'delivered' })
+      .eq('id', orderId);
+    if (updErr) throw updErr;
+    return 'ok';
+  } catch (e) { console.error('verifyDeliveryOtp:', e); return 'error'; }
+};
+
+// ── PIN ───────────────────────────────────────────────────────────────────────
 export const setUserPin = async (userId: string, pin: string): Promise<boolean> => {
   try {
     const { error } = await supabase.from('users').update({ pin }).eq('id', userId);
@@ -292,13 +342,8 @@ export const getUserPinByUsername = async (username: string): Promise<{ id: stri
     return data ? { id: data.id, pin: data.pin ?? null } : null;
   } catch (e) { console.error('getUserPinByUsername:', e); return null; }
 };
-// ── PASSWORD FUNCTIONS — add these to the bottom of services/dbService.ts ────
 
-/**
- * Verifies a user's current password. Returns true if matches.
- * Passwords are stored as plain text in the `password` column.
- * (For production you'd hash these — but this matches the current auth pattern.)
- */
+// ── Password ──────────────────────────────────────────────────────────────────
 export const verifyUserPassword = async (userId: string, password: string): Promise<boolean> => {
   try {
     const { data, error } = await supabase
@@ -311,9 +356,6 @@ export const verifyUserPassword = async (userId: string, password: string): Prom
   } catch (e) { console.error('verifyUserPassword:', e); return false; }
 };
 
-/**
- * Updates a user's password after verifying the current one.
- */
 export const changeUserPassword = async (
   userId: string,
   currentPassword: string,
@@ -322,7 +364,6 @@ export const changeUserPassword = async (
   try {
     const isValid = await verifyUserPassword(userId, currentPassword);
     if (!isValid) return false;
-
     const { error } = await supabase
       .from('users')
       .update({ password: newPassword })
@@ -332,9 +373,6 @@ export const changeUserPassword = async (
   } catch (e) { console.error('changeUserPassword:', e); return false; }
 };
 
-/**
- * Sets a password for a user (used during registration or reset).
- */
 export const setUserPassword = async (userId: string, password: string): Promise<boolean> => {
   try {
     const { error } = await supabase
