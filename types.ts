@@ -16,7 +16,7 @@ export interface User {
   username: string;
   profilePicture: string;
   phone?: string;
-  bio?: string;          // ← add this
+  bio?: string;
   isAdmin?: boolean;
   isVerified?: boolean;
   isBoosted?: boolean;
@@ -50,4 +50,4 @@ export interface MessageThread {
   lastMessageTimestamp: number;
 }
 
-export type Page = 'home' | 'saved' | 'messages' | 'profile' | 'edit-profile' | 'admin' | 'cart';
+export type Page = 'home' | 'saved' | 'messages' | 'profile' | 'edit-profile' | 'admin' | 'cart' | 'seller-orders';
