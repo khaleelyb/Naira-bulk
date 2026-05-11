@@ -30,6 +30,7 @@ import { CartItem } from './types';
 import { PinModal } from './components/PinModal';
 import { changeUserPassword } from './services/dbService';
 import { setUserPassword } from './services/dbService'; // add this line
+import { SellerOrdersPage } from './components/SellerOrdersPage';
 
 // ── Admin usernames – add yours here ──────────────────────────────────────────
 const ADMIN_USERNAMES = ['admin', 'superadmin007gunfu', 'admin1', 'superadmin00700'];
