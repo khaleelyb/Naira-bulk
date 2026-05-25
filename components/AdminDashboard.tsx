@@ -123,6 +123,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
 
   const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
 
@@ -304,7 +305,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         // Prefer larger image column first (often image2/full-size), then fallback.
         const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
-        const category = inferCategory(cols[idx.category], title);
+        const category = bulkCategoryChoice === '__auto__'
+          ? inferCategory(cols[idx.category], title)
+          : bulkCategoryChoice;
         return {
           title,
           price: price ?? 0,
@@ -702,6 +705,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <select value={productCategoryFilter} onChange={e => setProductCategoryFilter(e.target.value)}
                 className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
                 <option value="All">All Categories</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select
+                value={bulkCategoryChoice}
+                onChange={e => setBulkCategoryChoice(e.target.value)}
+                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+                title="Apply one category to all rows (or keep auto)"
+              >
+                <option value="__auto__">Auto category (from file/title)</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
