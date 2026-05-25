@@ -240,12 +240,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return cols;
   };
 
+  const normalizeMarketplaceImageUrl = (url: string): string => {
+    // Upgrade common marketplace thumbnail transforms to clearer images.
+    return url
+      .replace(/\/w\/150(\/|$)/i, '/w/900$1')
+      .replace(/\/q\/50(\/|$)/i, '/q/90$1')
+      .replace(/format\/avif/i, 'format/jpeg');
+  };
+
   const pickBestImageUrl = (rawCandidates: Array<unknown>): string => {
     for (const raw of rawCandidates) {
       const txt = String(raw ?? '').trim();
       if (!txt) continue;
       const match = txt.match(/https?:\/\/[^\s"']+/i);
-      if (match?.[0]) return match[0];
+      if (match?.[0]) return normalizeMarketplaceImageUrl(match[0]);
     }
     return '';
   };
@@ -277,7 +285,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const mapped: Omit<Product, 'id'>[] = dataRows.map((rowLine) => {
         const cols = parseMarketplaceRow(rowLine, delimiter);
         const title = String(cols[idx.title] ?? cols[2] ?? '').trim();
-        const image = pickBestImageUrl([cols[idx.image], cols[5], cols[4]]);
+        // Prefer larger image column first (often image2/full-size), then fallback.
+        const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
         return {
           title,
