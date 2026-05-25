@@ -30,6 +30,7 @@ interface AdminDashboardProps {
   onDeleteUser: (id: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
+  onImportProducts: (products: Omit<Product, 'id'>[]) => Promise<{ created: number; skipped: number }>;
   onBack: () => void;
 }
 
@@ -109,7 +110,7 @@ const formatDate = (iso: string) => {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   products, users, orders, currentUser,
-  onDeleteProduct, onEditProduct, onDeleteUser, onUpdateUser, onUpdateOrderStatus, onBack,
+  onDeleteProduct, onEditProduct, onDeleteUser, onUpdateUser, onUpdateOrderStatus, onImportProducts, onBack,
 }) => {
   const [tab, setTab] = useState<AdminTab>('overview');
   const [productSearch, setProductSearch] = useState('');
@@ -120,6 +121,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'product' | 'user'; id: string; name: string } | null>(null);
   const [boostPickerUserId, setBoostPickerUserId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
 
   const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
 
@@ -185,6 +188,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const NEXT_LABEL: Record<string, string> = {
     success: '📦 Mark as Shipped',
     shipped: '✅ Mark as Delivered',
+  };
+
+  const parsePrice = (value: unknown): number | null => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value !== 'string') return null;
+    const numeric = value.replace(/[^\d.]/g, '');
+    const parsed = Number(numeric);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportMessage(null);
+    setImporting(true);
+    try {
+      const rawText = await file.text();
+      const rows = rawText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const mapped: Omit<Product, 'id'>[] = rows.map((rowLine) => {
+        const cols = rowLine.split('\t');
+        const title = String(cols[2] ?? '').trim();
+        const image = String(cols[4] ?? cols[5] ?? '').trim();
+        const price = parsePrice(cols[3]);
+        return {
+          title,
+          price: price ?? 0,
+          category: 'General',
+          images: image ? [image] : [],
+          location: 'Nigeria',
+          date: new Date().toISOString().slice(0, 10),
+          description: title,
+          sellerId: currentUser.id,
+        };
+      }).filter(p => p.title && p.price > 0 && p.images.length > 0);
+
+      if (!mapped.length) {
+        setImportMessage('No valid rows found. Required: title/name, image, and price.');
+      } else {
+        const result = await onImportProducts(mapped);
+        setImportMessage(`Imported ${result.created} products${result.skipped > 0 ? `, skipped ${result.skipped}` : ''}.`);
+      }
+    } catch {
+      setImportMessage('Failed to read file. Please upload tab-separated product export data.');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
   };
 
   const tabs: { id: AdminTab; label: string; badge?: number }[] = [
@@ -560,7 +610,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="All">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
+                {importing ? 'Importing…' : 'Import .xlsx'}
+                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
+              </label>
             </div>
+            {importMessage && <p className="text-xs text-gray-500 dark:text-gray-400">{importMessage}</p>}
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800">
