@@ -222,6 +222,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return out;
   };
 
+  const parseMarketplaceRow = (line: string, delimiter: ',' | '\t') => {
+    const cols = parseDelimitedLine(line, delimiter);
+    if (delimiter === '\t') return cols;
+
+    // Some CSV exports are not properly quoted even when title contains commas.
+    // For rows shaped like: id,url,title...,price,image,image2 we recover by pattern.
+    const priceIdx = cols.findIndex(c => /₦?\s*\d[\d,]*/.test(c));
+    if (priceIdx > 2) {
+      const title = cols.slice(2, priceIdx).join(',').trim();
+      const tail = cols.slice(priceIdx + 1);
+      const urls = tail.filter(c => /^https?:\/\//i.test(c.trim()));
+      const image = urls[0] ?? '';
+      const image2 = urls[1] ?? urls[0] ?? '';
+      return [cols[0] ?? '', cols[1] ?? '', title, cols[priceIdx] ?? '', image, image2];
+    }
+    return cols;
+  };
+
+  const pickBestImageUrl = (rawCandidates: Array<unknown>): string => {
+    for (const raw of rawCandidates) {
+      const txt = String(raw ?? '').trim();
+      if (!txt) continue;
+      const match = txt.match(/https?:\/\/[^\s"']+/i);
+      if (match?.[0]) return match[0];
+    }
+    return '';
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -247,9 +275,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       };
 
       const mapped: Omit<Product, 'id'>[] = dataRows.map((rowLine) => {
-        const cols = parseDelimitedLine(rowLine, delimiter);
+        const cols = parseMarketplaceRow(rowLine, delimiter);
         const title = String(cols[idx.title] ?? cols[2] ?? '').trim();
-        const image = String(cols[idx.image] ?? cols[4] ?? cols[5] ?? '').trim();
+        const image = pickBestImageUrl([cols[idx.image], cols[5], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
         return {
           title,
