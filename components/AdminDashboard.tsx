@@ -263,10 +263,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const normalizeMarketplaceImageUrl = (url: string): string => {
     // Upgrade common marketplace thumbnail transforms to clearer images.
-    return url
+    let normalized = url
       .replace(/\/w\/150(\/|$)/i, '/w/900$1')
       .replace(/\/q\/50(\/|$)/i, '/q/90$1')
       .replace(/format\/avif/i, 'format/jpeg');
+    // Support Alibaba CDN image size pattern: `.310x310.jpg` -> larger render.
+    normalized = normalized.replace(/\.\d{2,4}x\d{2,4}(\.(jpg|jpeg|png|webp))$/i, '.1000x1000$1');
+    return normalized;
   };
 
   const pickBestImageUrl = (rawCandidates: Array<unknown>): string => {
