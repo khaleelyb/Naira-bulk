@@ -240,6 +240,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return cols;
   };
 
+  const inferCategory = (rawCategory: unknown, title: string): string => {
+    const explicit = String(rawCategory ?? '').trim();
+    if (explicit && explicit.toLowerCase() !== 'general') return explicit;
+    const bracketMatch = title.match(/\[([^\]]+)\]/);
+    if (bracketMatch?.[1]) return bracketMatch[1].trim();
+    const lower = title.toLowerCase();
+    if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('slipper')) return 'Shoes';
+    if (lower.includes('phone') || lower.includes('iphone') || lower.includes('android')) return 'Phones';
+    if (lower.includes('laptop') || lower.includes('computer')) return 'Computers';
+    if (lower.includes('watch')) return 'Watches';
+    if (lower.includes('bag') || lower.includes('backpack')) return 'Bags';
+    if (lower.includes('dress') || lower.includes('shirt') || lower.includes('fashion')) return 'Fashion';
+    return 'Misc';
+  };
+
   const normalizeMarketplaceImageUrl = (url: string): string => {
     // Upgrade common marketplace thumbnail transforms to clearer images.
     return url
@@ -280,6 +295,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         title: headers.findIndex(h => ['title', 'name', 'product_title', 'data'].includes(h)),
         price: headers.findIndex(h => ['price', 'amount', 'data6'].includes(h)),
         image: headers.findIndex(h => ['image', 'image_url', 'thumbnail', 'image2'].includes(h)),
+        category: headers.findIndex(h => ['category', 'cat', 'type', 'group'].includes(h)),
       };
 
       const mapped: Omit<Product, 'id'>[] = dataRows.map((rowLine) => {
@@ -288,10 +304,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         // Prefer larger image column first (often image2/full-size), then fallback.
         const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
+        const category = inferCategory(cols[idx.category], title);
         return {
           title,
           price: price ?? 0,
-          category: 'General',
+          category,
           images: image ? [image] : [],
           location: 'Nigeria',
           date: new Date().toISOString().slice(0, 10),
