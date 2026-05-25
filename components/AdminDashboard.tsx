@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, User } from '../types';
+import { CATEGORIES } from '../constants';
 
 export interface Order {
   id: string;
@@ -125,7 +126,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
 
-  const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
+  const categories = useMemo(() => {
+    const fromProducts = products.map(p => p.category).filter(Boolean);
+    return Array.from(new Set([...CATEGORIES, ...fromProducts]));
+  }, [products]);
 
   const filteredProducts = useMemo(() => products.filter(p => {
     const s = productSearch.toLowerCase();
