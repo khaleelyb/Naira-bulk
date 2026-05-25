@@ -198,6 +198,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return Number.isFinite(parsed) ? parsed : null;
   };
 
+  const parseDelimitedLine = (line: string, delimiter: ',' | '\t'): string[] => {
+    const out: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === delimiter && !inQuotes) {
+        out.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    out.push(current.trim());
+    return out;
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -205,12 +229,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setImporting(true);
     try {
       const rawText = await file.text();
+      if (!rawText || rawText.length < 3) {
+        setImportMessage('File is empty. Please upload CSV/TSV exported from your sheet.');
+        return;
+      }
+
       const rows = rawText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-      const mapped: Omit<Product, 'id'>[] = rows.map((rowLine) => {
-        const cols = rowLine.split('\t');
-        const title = String(cols[2] ?? '').trim();
-        const image = String(cols[4] ?? cols[5] ?? '').trim();
-        const price = parsePrice(cols[3]);
+      const firstRow = rows[0] || '';
+      const delimiter: ',' | '\t' = firstRow.includes('\t') ? '\t' : ',';
+      const headers = parseDelimitedLine(firstRow, delimiter).map(h => h.toLowerCase().trim());
+      const dataRows = rows.slice(1);
+
+      const idx = {
+        title: headers.findIndex(h => ['title', 'name', 'product_title', 'data'].includes(h)),
+        price: headers.findIndex(h => ['price', 'amount', 'data6'].includes(h)),
+        image: headers.findIndex(h => ['image', 'image_url', 'thumbnail', 'image2'].includes(h)),
+      };
+
+      const mapped: Omit<Product, 'id'>[] = dataRows.map((rowLine) => {
+        const cols = parseDelimitedLine(rowLine, delimiter);
+        const title = String(cols[idx.title] ?? cols[2] ?? '').trim();
+        const image = String(cols[idx.image] ?? cols[4] ?? cols[5] ?? '').trim();
+        const price = parsePrice(cols[idx.price] ?? cols[3]);
         return {
           title,
           price: price ?? 0,
@@ -224,13 +264,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }).filter(p => p.title && p.price > 0 && p.images.length > 0);
 
       if (!mapped.length) {
-        setImportMessage('No valid rows found. Required: title/name, image, and price.');
+        setImportMessage('No valid rows found. Required columns: title/name/data, price/data6, and image/image2.');
       } else {
         const result = await onImportProducts(mapped);
         setImportMessage(`Imported ${result.created} products${result.skipped > 0 ? `, skipped ${result.skipped}` : ''}.`);
       }
     } catch {
-      setImportMessage('Failed to read file. Please upload tab-separated product export data.');
+      setImportMessage('Failed to read file. Upload CSV/TSV export (not raw .xlsx binary).');
     } finally {
       setImporting(false);
       e.target.value = '';
@@ -611,8 +651,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
-                {importing ? 'Importing…' : 'Import .xlsx'}
-                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
+                {importing ? 'Importing…' : 'Import file'}
+                <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
               </label>
             </div>
             {importMessage && <p className="text-xs text-gray-500 dark:text-gray-400">{importMessage}</p>}
