@@ -125,6 +125,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
+  const [importPriceIncreasePct, setImportPriceIncreasePct] = useState<number>(0);
 
   const categories = useMemo(() => {
     const fromProducts = products.map(p => p.category).filter(Boolean);
@@ -309,12 +310,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         // Prefer larger image column first (often image2/full-size), then fallback.
         const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
+        const adjustedPrice = price ? Math.max(0, Math.round(price * (1 + importPriceIncreasePct / 100))) : 0;
         const category = bulkCategoryChoice === '__auto__'
           ? inferCategory(cols[idx.category], title)
           : bulkCategoryChoice;
         return {
           title,
-          price: price ?? 0,
+          price: adjustedPrice,
           category,
           images: image ? [image] : [],
           location: 'Nigeria',
@@ -720,6 +722,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="__auto__">Auto category (from file/title)</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">Price +%</span>
+                {[0, 5, 10, 15, 20].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setImportPriceIncreasePct(pct)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
+                      importPriceIncreasePct === pct
+                        ? 'bg-green-500 text-white'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {pct === 0 ? '0' : `+${pct}`}
+                  </button>
+                ))}
+              </div>
               <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
                 {importing ? 'Importing…' : 'Import file'}
                 <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
