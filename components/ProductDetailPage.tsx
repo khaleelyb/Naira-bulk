@@ -3,6 +3,8 @@ import { Product, User } from '../types';
 import { Icon } from './Icon';
 import { PaymentModal } from './PaymentModal';
 import { CART_CATEGORIES } from '../constants';
+import { SizePicker } from './SizePicker';
+import { SIZE_CATEGORIES } from '../constants';
 
 const VerifiedBadge = () => (
   <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" title="Verified seller">
@@ -53,6 +55,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+const [sizeError, setSizeError] = useState(false);
+const needsSize = !!SIZE_CATEGORIES[product.category];
 
   const images = product.images && product.images.length > 0 ? product.images : [];
 
@@ -67,16 +72,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const canAddToCart = CART_CATEGORIES.has(product.category);
 
   const whatsappMessage = encodeURIComponent(
-    `Hi, I'm interested in your "${product.title}" listed on Kano Market. Is it still available?`
+    `Hi, I'm interested in your "${product.title}" listed on Nairabulk. Is it still available?`
   );
 
   const isOwnListing = currentUser?.id === product.sellerId;
 
   const handleBuyNow = () => {
-    if (!currentUser) { onLoginClick(); return; }
-    if (isOwnListing) return;
-    setIsPaymentModalOpen(true);
-  };
+  if (!currentUser) { onLoginClick(); return; }
+  if (isOwnListing) return;
+  if (needsSize && !selectedSize) { setSizeError(true); return; }
+  setIsPaymentModalOpen(true);
+};
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -181,6 +187,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           <div className="space-y-4">
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 md:sticky md:top-24">
               <div className="space-y-2.5">
+              
+                <SizePicker
+  category={product.category}
+  selectedSize={selectedSize}
+  onChange={(s) => { setSelectedSize(s); setSizeError(false); }}
+  error={sizeError}
+/>
 
                 {/* Buy Now */}
                 {!isOwnListing && (
