@@ -708,93 +708,149 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* ══ PRODUCTS ══════════════════════════════════════════════════════════ */}
         {tab === 'products' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-                <input type="text" placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
-              </div>
-              <select value={productCategoryFilter} onChange={e => setProductCategoryFilter(e.target.value)}
-                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
-                <option value="All">All Categories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select
-                value={bulkCategoryChoice}
-                onChange={e => setBulkCategoryChoice(e.target.value)}
-                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
-                title="Apply one category to all rows (or keep auto)"
-              >
-                <option value="__auto__">Auto category (from file/title)</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">Price +%</span>
-                {[0, 10, 25, 50, 75, 100].map((pct) => (
-                  <button
-                    key={pct}
-                    type="button"
-                    onClick={() => setImportPriceIncreasePct(pct)}
-                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
-                      importPriceIncreasePct === pct
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {pct === 0 ? '0' : `+${pct}`}
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={importPriceIncreasePct}
-                  onChange={e => {
-                    const next = Number(e.target.value);
-                    if (!Number.isFinite(next)) return;
-                    setImportPriceIncreasePct(Math.max(0, Math.min(100, Math.round(next))));
-                  }}
-                  className="w-16 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
-                  title="Enter custom price increase percentage (0-100)"
-                />
-              </div>
-              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
-                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">+₦</span>
-                {[0, 500, 1000, 1500, 2000].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setImportPriceIncreaseNaira(amt)}
-                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
-                      importPriceIncreaseNaira === amt
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {amt}
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  min={0}
-                  step={100}
-                  value={importPriceIncreaseNaira}
-                  onChange={e => {
-                    const next = Number(e.target.value);
-                    if (!Number.isFinite(next)) return;
-                    setImportPriceIncreaseNaira(Math.max(0, Math.round(next)));
-                  }}
-                  className="w-20 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
-                  title="Enter fixed Naira value to add to every imported product"
-                />
-              </div>
-              <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
-                {importing ? 'Importing…' : 'Import file'}
-                <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
-              </label>
-            </div>
-            {importMessage && <p className="text-xs text-gray-500 dark:text-gray-400">{importMessage}</p>}
+            {/* ── Search + category filter row ── */}
+<div className="flex flex-col sm:flex-row gap-3">
+  <div className="flex-1 relative">
+    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+    <input type="text" placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)}
+      className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
+  </div>
+  <select value={productCategoryFilter} onChange={e => setProductCategoryFilter(e.target.value)}
+    className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
+    <option value="All">All Categories</option>
+    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+  </select>
+</div>
+
+{/* ── Import card ── */}
+<div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+  <div className="flex items-center gap-2 mb-4">
+    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+      <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+    </div>
+    <div>
+      <p className="text-sm font-bold text-gray-900 dark:text-white">Import Products</p>
+      <p className="text-xs text-gray-400">CSV or TSV file · title, price, image columns required</p>
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    {/* Assign category */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+        Assign category
+      </label>
+      <select
+        value={bulkCategoryChoice}
+        onChange={e => setBulkCategoryChoice(e.target.value)}
+        className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
+        <option value="__auto__">Auto-detect from file</option>
+        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+      </select>
+    </div>
+
+    {/* Price increase % */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+        Price markup (%)
+      </label>
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1 flex-wrap">
+          {[0, 10, 25, 50].map(pct => (
+            <button
+              key={pct}
+              type="button"
+              onClick={() => setImportPriceIncreasePct(pct)}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border ${
+                importPriceIncreasePct === pct
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-300'
+              }`}
+            >
+              {pct === 0 ? '0%' : `+${pct}%`}
+            </button>
+          ))}
+        </div>
+        <input
+          type="number" min={0} max={200} step={1}
+          value={importPriceIncreasePct}
+          onChange={e => setImportPriceIncreasePct(Math.max(0, Math.round(Number(e.target.value))))}
+          className="w-16 px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+          placeholder="%"
+        />
+      </div>
+    </div>
+
+    {/* Fixed naira markup */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+        Fixed markup (₦)
+      </label>
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1 flex-wrap">
+          {[0, 500, 1000, 2000].map(amt => (
+            <button
+              key={amt}
+              type="button"
+              onClick={() => setImportPriceIncreaseNaira(amt)}
+              className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border ${
+                importPriceIncreaseNaira === amt
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-300'
+              }`}
+            >
+              {amt === 0 ? '₦0' : `+₦${amt}`}
+            </button>
+          ))}
+        </div>
+        <input
+          type="number" min={0} step={100}
+          value={importPriceIncreaseNaira}
+          onChange={e => setImportPriceIncreaseNaira(Math.max(0, Math.round(Number(e.target.value))))}
+          className="w-20 px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+          placeholder="₦"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Upload button + feedback */}
+  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+    <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors border ${
+      importing
+        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+        : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40'
+    }`}>
+      {importing ? (
+        <>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+          Importing…
+        </>
+      ) : (
+        <>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+          Choose file to import
+        </>
+      )}
+      <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={handleImportFile} disabled={importing} />
+    </label>
+
+    {importMessage && (
+      <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl border ${
+        importMessage.startsWith('Imported')
+          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+          : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+      }`}>
+        {importMessage.startsWith('Imported')
+          ? <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          : <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+        }
+        {importMessage}
+      </div>
+    )}
+  </div>
+</div>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800">
@@ -851,7 +907,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 onClick={() => setConfirmDelete({ type: 'product', id: p.id, name: p.title })}
                                 className="text-xs font-semibold text-red-500 hover:text-white hover:bg-red-500 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-800 transition-all"
                               >
-                                Delete
+                                Del
                               </button>
                             </div>
                           </td>
