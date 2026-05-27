@@ -41,7 +41,7 @@ interface CategoryFilterProps {
   setSelectedCategory: (category: string) => void;
 }
 
-const PREVIEW_COUNT = 10;
+const PREVIEW_COUNT = 30;
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({ categories, selectedCategory, setSelectedCategory }) => {
   const [showAll, setShowAll] = useState(false);
