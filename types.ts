@@ -39,6 +39,7 @@ export interface Message {
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedSize?: string;
 }
 
 export interface MessageThread {
