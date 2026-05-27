@@ -269,11 +269,13 @@ export const CartPage: React.FC<CartPageProps> = ({
     const result = await initiateCartPayment({
       sellerId: group.sellerId,
       items: group.items.map(i => ({
-        productId: i.product.id,
-        productTitle: i.product.title,
-        quantity: i.quantity,
-        unitPrice: i.product.price,
-      })),
+  productId: i.product.id,
+  productTitle: i.selectedSize
+    ? `${i.product.title} (Size ${i.selectedSize})`
+    : i.product.title,
+  quantity: i.quantity,
+  unitPrice: i.product.price,
+})),
       totalAmount: group.total,
       buyerId: currentUser.id,
       buyerName: details.name,
@@ -628,8 +630,11 @@ export const CartPage: React.FC<CartPageProps> = ({
                             </button>
                             <div className="flex-1 min-w-0">
                               <button onClick={() => onSelectProduct(product)} className="text-left">
-                                <p className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.title}</p>
-                              </button>
+  <p className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.title}</p>
+  {item.selectedSize && (
+    <span className="text-xs text-gray-400">Size: {item.selectedSize}</span>
+  )}
+</button>
                               <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
                                 ₦{(product.price * quantity).toLocaleString()}
                                 {quantity > 1 && <span className="text-xs font-normal text-gray-400 ml-1">(₦{product.price.toLocaleString()} each)</span>}
