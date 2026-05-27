@@ -289,31 +289,37 @@ export const CartPage: React.FC<CartPageProps> = ({
     if (!result) { onFail(); return; }
 
     let attempts = 0;
-    while (!window.Korapay && attempts < 20) {
-      await new Promise(r => setTimeout(r, 150));
-      attempts++;
-    }
-    if (!window.Korapay) { onFail(); return; }
+while (!window.PaystackPop && attempts < 20) {
+  await new Promise(r => setTimeout(r, 150));
+  attempts++;
+}
+if (!window.PaystackPop) { onFail(); return; }
 
-    window.Korapay.initialize({
-      key: KORAPAY_PUBLIC_KEY,
-      reference: result.reference,
-      amount: result.amount,
-      currency: result.currency,
-      customer: result.customer,
-      narration: `Payment for ${group.items.length} item(s) from ${group.sellerName}`,
-      onClose: () => { onFail(); },
-      onSuccess: async (data: { reference: string }) => {
-        const v = await verifyPayment(data.reference);
-        if (v?.status === 'success') {
-          onDone(v.deliveryOtp ?? null);
-        } else {
-          onFail();
-        }
-      },
-      onFailed: () => { onFail(); },
-    });
-  };
+const handler = window.PaystackPop.setup({
+  key: PAYSTACK_PUBLIC_KEY,
+  email: details.email,
+  amount: result.amount * 100, // kobo
+  currency: 'NGN',
+  ref: result.reference,
+  metadata: {
+    custom_fields: [
+      { display_name: 'Buyer', variable_name: 'buyer', value: details.name },
+      { display_name: 'Phone', variable_name: 'phone', value: details.phone },
+      { display_name: 'Address', variable_name: 'address', value: details.address },
+    ],
+  },
+  onClose: () => { onFail(); },
+  callback: async (response: { reference: string }) => {
+    const v = await verifyPayment(response.reference);
+    if (v?.status === 'success') {
+      onDone(v.deliveryOtp ?? null);
+    } else {
+      onFail();
+    }
+  },
+});
+
+handler.openIframe();
 
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
     setBuyerDetails(details);
