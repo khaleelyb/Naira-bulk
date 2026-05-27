@@ -320,6 +320,7 @@ const handler = window.PaystackPop.setup({
 });
 
 handler.openIframe();
+     };
 
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
     setBuyerDetails(details);
