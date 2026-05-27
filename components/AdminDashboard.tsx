@@ -126,6 +126,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
   const [importPriceIncreasePct, setImportPriceIncreasePct] = useState<number>(0);
+  const [importPriceIncreaseNaira, setImportPriceIncreaseNaira] = useState<number>(0);
 
   const categories = useMemo(() => {
     const fromProducts = products.map(p => p.category).filter(Boolean);
@@ -313,7 +314,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         // Prefer larger image column first (often image2/full-size), then fallback.
         const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
         const price = parsePrice(cols[idx.price] ?? cols[3]);
-        const adjustedPrice = price ? Math.max(0, Math.round(price * (1 + importPriceIncreasePct / 100))) : 0;
+        const adjustedPrice = price
+          ? Math.max(0, Math.round((price * (1 + importPriceIncreasePct / 100)) + importPriceIncreaseNaira))
+          : 0;
         const category = bulkCategoryChoice === '__auto__'
           ? inferCategory(cols[idx.category], title)
           : bulkCategoryChoice;
@@ -754,6 +757,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   }}
                   className="w-16 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
                   title="Enter custom price increase percentage (0-100)"
+                />
+              </div>
+              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">+₦</span>
+                {[0, 500, 1000, 1500, 2000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setImportPriceIncreaseNaira(amt)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
+                      importPriceIncreaseNaira === amt
+                        ? 'bg-green-500 text-white'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {amt}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={importPriceIncreaseNaira}
+                  onChange={e => {
+                    const next = Number(e.target.value);
+                    if (!Number.isFinite(next)) return;
+                    setImportPriceIncreaseNaira(Math.max(0, Math.round(next)));
+                  }}
+                  className="w-20 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+                  title="Enter fixed Naira value to add to every imported product"
                 />
               </div>
               <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
