@@ -1,4 +1,3 @@
-// services/paymentService.ts
 import { supabase } from './supabase_client';
 import { generateDeliveryOtp, storeDeliveryOtp } from './dbService';
 
@@ -11,6 +10,7 @@ export interface InitiatePaymentParams {
   buyerEmail: string;
   buyerPhone: string;
   buyerAddress: string;
+  sellerId?: string;
 }
 
 export interface InitiateCartPaymentParams {
@@ -44,7 +44,7 @@ export const initiatePayment = async (
   params: InitiatePaymentParams
 ): Promise<PaymentInitResult | null> => {
   try {
-    const { data, error } = await supabase.functions.invoke('korapay-charge', {
+    const { data, error } = await supabase.functions.invoke('paystack-charge', {
       body: params,
     });
     if (error) { console.error('initiatePayment error:', error); return null; }
@@ -60,7 +60,7 @@ export const initiateCartPayment = async (
       ? `${params.items[0].productTitle}${params.items[0].quantity > 1 ? ` ×${params.items[0].quantity}` : ''}`
       : `${params.items.length} items (cart order)`;
 
-    const { data, error } = await supabase.functions.invoke('korapay-charge', {
+    const { data, error } = await supabase.functions.invoke('paystack-charge', {
       body: {
         productId: params.items[0].productId,
         productTitle,
@@ -79,40 +79,23 @@ export const initiateCartPayment = async (
   } catch (err) { console.error('initiateCartPayment unexpected error:', err); return null; }
 };
 
-/**
- * Verifies a KoraPay payment and — if successful — generates + stores a 6-digit
- * delivery OTP on the order row.  Returns the OTP so the buyer can see it immediately.
- */
 export const verifyPayment = async (
   reference: string
 ): Promise<PaymentVerifyResult | null> => {
   try {
-    const { data, error } = await supabase.functions.invoke('korapay-verify', {
+    const { data, error } = await supabase.functions.invoke('paystack-verify', {
       body: { reference },
     });
     if (error) { console.error('verifyPayment error:', error); return null; }
 
     const result = data as PaymentVerifyResult;
 
-    // If payment succeeded and we have an orderId, generate + store the delivery OTP
     if (result?.status === 'success' && result.orderId) {
       const otp = generateDeliveryOtp();
       const stored = await storeDeliveryOtp(result.orderId, otp);
-      if (stored) {
-        result.deliveryOtp = otp;
-      }
+      if (stored) result.deliveryOtp = otp;
     }
 
     return result;
   } catch (err) { console.error('verifyPayment unexpected error:', err); return null; }
-};
-
-export const getBuyerOrders = async (buyerId: string) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('buyer_id', buyerId)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('getBuyerOrders error:', error); return []; }
-  return data ?? [];
 };
