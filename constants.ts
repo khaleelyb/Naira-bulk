@@ -42,3 +42,10 @@ export const CART_CATEGORIES = new Set([
   'Grocery',
   'Order Food',
 ]);
+
+export const SIZE_CATEGORIES: Record<string, string[]> = {
+  'Men clothes':  ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'],
+  'Women clothes':['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'],
+  'Men shoes':    ['39', '40', '41', '42', '43', '44', '45', '46'],
+  'Women shoes':  ['36', '37', '38', '39', '40', '41', '42'],
+};
