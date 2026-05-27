@@ -6,6 +6,7 @@ import { HelpSupportPage } from './HelpSupportPage';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { PrivacyPage } from './PrivacyPage';
 import { TermsPage } from './TermsPage';
+import { CATEGORIES } from '../constants';
 
 const VerifiedBadge = () => (
   <svg className="w-6 h-6 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" title="Verified account">
@@ -63,6 +64,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [listingCategoryFilter, setListingCategoryFilter] = useState('All');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!currentUser) {
@@ -84,6 +86,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
   const isSeller = currentUser.isApprovedSeller && !currentUser.isAdmin;
   const isAdmin = currentUser.isAdmin;
+  const listingCategories = Array.from(new Set([...CATEGORIES, ...userProducts.map(p => p.category)]));
+  const filteredUserProducts = listingCategoryFilter === 'All'
+    ? userProducts
+    : userProducts.filter(p => p.category === listingCategoryFilter);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -300,10 +306,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
       {/* My Listings */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">My Listings</h2>
-        {userProducts.length > 0 ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">My Listings</h2>
+          {isAdmin && (
+            <select
+              value={listingCategoryFilter}
+              onChange={e => setListingCategoryFilter(e.target.value)}
+              className="px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="All">All Categories</option>
+              {listingCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          )}
+        </div>
+        {filteredUserProducts.length > 0 ? (
           <ProductGrid
-            products={userProducts}
+            products={filteredUserProducts}
             onMessageSeller={onMessageSeller}
             savedProductIds={savedProductIds}
             onToggleSave={onToggleSave}
