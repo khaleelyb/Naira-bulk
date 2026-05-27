@@ -727,7 +727,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </select>
               <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
                 <span className="text-xs text-gray-500 dark:text-gray-400 px-1">Price +%</span>
-                {[0, 5, 10, 15, 20].map((pct) => (
+                {[0, 10, 25, 50, 75, 100].map((pct) => (
                   <button
                     key={pct}
                     type="button"
@@ -741,6 +741,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {pct === 0 ? '0' : `+${pct}`}
                   </button>
                 ))}
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={importPriceIncreasePct}
+                  onChange={e => {
+                    const next = Number(e.target.value);
+                    if (!Number.isFinite(next)) return;
+                    setImportPriceIncreasePct(Math.max(0, Math.min(100, Math.round(next))));
+                  }}
+                  className="w-16 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+                  title="Enter custom price increase percentage (0-100)"
+                />
               </div>
               <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
                 {importing ? 'Importing…' : 'Import file'}
