@@ -388,9 +388,21 @@ const handleSaveBuyerDetails = async (email: string, address: string, phone: str
     if (ok) { setProducts(products.filter(p => p.id !== id)); showToast('Product deleted.'); }
     else showToast('Error deleting product.');
   };
-const handleAdminEditProduct = (product: Product) => {
+  const handleAdminEditProduct = (product: Product) => {
     setProductToEdit(product);
     setIsAddProductModalOpen(true);
+  };
+  const handleAdminImportProducts = async (items: Omit<Product, 'id'>[]) => {
+    let created = 0;
+    for (const item of items) {
+      const createdProduct = await db.createProduct(item);
+      if (createdProduct) {
+        created += 1;
+        setProducts(prev => [createdProduct, ...prev]);
+      }
+    }
+    if (created > 0) showToast(`${created} product${created === 1 ? '' : 's'} imported.`);
+    return { created, skipped: items.length - created };
   };
   const handleAdminDeleteUser = async (id: string) => {
     const userProds = products.filter(p => p.sellerId === id);
@@ -651,6 +663,7 @@ cartItemCount={cartItems.find(i => i.product.id === selectedProduct.id)?.quantit
               onDeleteUser={handleAdminDeleteUser} 
               onUpdateUser={handleAdminUpdateUser} 
               onUpdateOrderStatus={handleUpdateOrderStatus}
+              onImportProducts={handleAdminImportProducts}
               onBack={handleBack} 
             />
           : <AuthPrompt page="home" onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} />;

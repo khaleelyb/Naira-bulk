@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, User } from '../types';
+import { CATEGORIES } from '../constants';
 
 export interface Order {
   id: string;
@@ -30,6 +31,7 @@ interface AdminDashboardProps {
   onDeleteUser: (id: string) => void;
   onUpdateUser: (userId: string, updates: Partial<User>) => void;
   onUpdateOrderStatus: (orderId: string, status: Order['status']) => void;
+  onImportProducts: (products: Omit<Product, 'id'>[]) => Promise<{ created: number; skipped: number }>;
   onBack: () => void;
 }
 
@@ -109,7 +111,7 @@ const formatDate = (iso: string) => {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   products, users, orders, currentUser,
-  onDeleteProduct, onEditProduct, onDeleteUser, onUpdateUser, onUpdateOrderStatus, onBack,
+  onDeleteProduct, onEditProduct, onDeleteUser, onUpdateUser, onUpdateOrderStatus, onImportProducts, onBack,
 }) => {
   const [tab, setTab] = useState<AdminTab>('overview');
   const [productSearch, setProductSearch] = useState('');
@@ -120,8 +122,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'product' | 'user'; id: string; name: string } | null>(null);
   const [boostPickerUserId, setBoostPickerUserId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
+  const [importPriceIncreasePct, setImportPriceIncreasePct] = useState<number>(0);
+  const [importPriceIncreaseNaira, setImportPriceIncreaseNaira] = useState<number>(0);
 
-  const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
+  const categories = useMemo(() => {
+    const fromProducts = products.map(p => p.category).filter(Boolean);
+    return Array.from(new Set([...CATEGORIES, ...fromProducts]));
+  }, [products]);
 
   const filteredProducts = useMemo(() => products.filter(p => {
     const s = productSearch.toLowerCase();
@@ -185,6 +195,155 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const NEXT_LABEL: Record<string, string> = {
     success: '📦 Mark as Shipped',
     shipped: '✅ Mark as Delivered',
+  };
+
+  const parsePrice = (value: unknown): number | null => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value !== 'string') return null;
+    const numeric = value.replace(/[^\d.]/g, '');
+    const parsed = Number(numeric);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const parseDelimitedLine = (line: string, delimiter: ',' | '\t'): string[] => {
+    const out: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === delimiter && !inQuotes) {
+        out.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    out.push(current.trim());
+    return out;
+  };
+
+  const parseMarketplaceRow = (line: string, delimiter: ',' | '\t') => {
+    const cols = parseDelimitedLine(line, delimiter);
+    if (delimiter === '\t') return cols;
+
+    // Some CSV exports are not properly quoted even when title contains commas.
+    // For rows shaped like: id,url,title...,price,image,image2 we recover by pattern.
+    const priceIdx = cols.findIndex(c => /₦?\s*\d[\d,]*/.test(c));
+    if (priceIdx > 2) {
+      const title = cols.slice(2, priceIdx).join(',').trim();
+      const tail = cols.slice(priceIdx + 1);
+      const urls = tail.filter(c => /^https?:\/\//i.test(c.trim()));
+      const image = urls[0] ?? '';
+      const image2 = urls[1] ?? urls[0] ?? '';
+      return [cols[0] ?? '', cols[1] ?? '', title, cols[priceIdx] ?? '', image, image2];
+    }
+    return cols;
+  };
+
+  const inferCategory = (rawCategory: unknown, title: string): string => {
+    const explicit = String(rawCategory ?? '').trim();
+    if (explicit && explicit.toLowerCase() !== 'general') return explicit;
+    const bracketMatch = title.match(/\[([^\]]+)\]/);
+    if (bracketMatch?.[1]) return bracketMatch[1].trim();
+    const lower = title.toLowerCase();
+    if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('slipper')) return 'Shoes';
+    if (lower.includes('phone') || lower.includes('iphone') || lower.includes('android')) return 'Phones';
+    if (lower.includes('laptop') || lower.includes('computer')) return 'Computers';
+    if (lower.includes('watch')) return 'Watches';
+    if (lower.includes('bag') || lower.includes('backpack')) return 'Bags';
+    if (lower.includes('dress') || lower.includes('shirt') || lower.includes('fashion')) return 'Fashion';
+    return 'Misc';
+  };
+
+  const normalizeMarketplaceImageUrl = (url: string): string => {
+    // Upgrade common marketplace thumbnail transforms to clearer images.
+    let normalized = url
+      .replace(/\/w\/150(\/|$)/i, '/w/900$1')
+      .replace(/\/q\/50(\/|$)/i, '/q/90$1')
+      .replace(/format\/avif/i, 'format/jpeg');
+    // Support Alibaba CDN image size pattern: `.310x310.jpg` -> larger render.
+    normalized = normalized.replace(/\.\d{2,4}x\d{2,4}(\.(jpg|jpeg|png|webp))$/i, '.1000x1000$1');
+    return normalized;
+  };
+
+  const pickBestImageUrl = (rawCandidates: Array<unknown>): string => {
+    for (const raw of rawCandidates) {
+      const txt = String(raw ?? '').trim();
+      if (!txt) continue;
+      const match = txt.match(/https?:\/\/[^\s"']+/i);
+      if (match?.[0]) return normalizeMarketplaceImageUrl(match[0]);
+    }
+    return '';
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportMessage(null);
+    setImporting(true);
+    try {
+      const rawText = await file.text();
+      if (!rawText || rawText.length < 3) {
+        setImportMessage('File is empty. Please upload CSV/TSV exported from your sheet.');
+        return;
+      }
+
+      const rows = rawText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const firstRow = rows[0] || '';
+      const delimiter: ',' | '\t' = firstRow.includes('\t') ? '\t' : ',';
+      const headers = parseDelimitedLine(firstRow, delimiter).map(h => h.toLowerCase().trim());
+      const dataRows = rows.slice(1);
+
+      const idx = {
+        title: headers.findIndex(h => ['title', 'name', 'product_title', 'data'].includes(h)),
+        price: headers.findIndex(h => ['price', 'amount', 'data6'].includes(h)),
+        image: headers.findIndex(h => ['image', 'image_url', 'thumbnail', 'image2'].includes(h)),
+        category: headers.findIndex(h => ['category', 'cat', 'type', 'group'].includes(h)),
+      };
+
+      const mapped: Omit<Product, 'id'>[] = dataRows.map((rowLine) => {
+        const cols = parseMarketplaceRow(rowLine, delimiter);
+        const title = String(cols[idx.title] ?? cols[2] ?? '').trim();
+        // Prefer larger image column first (often image2/full-size), then fallback.
+        const image = pickBestImageUrl([cols[5], cols[idx.image], cols[4]]);
+        const price = parsePrice(cols[idx.price] ?? cols[3]);
+        const adjustedPrice = price
+          ? Math.max(0, Math.round((price * (1 + importPriceIncreasePct / 100)) + importPriceIncreaseNaira))
+          : 0;
+        const category = bulkCategoryChoice === '__auto__'
+          ? inferCategory(cols[idx.category], title)
+          : bulkCategoryChoice;
+        return {
+          title,
+          price: adjustedPrice,
+          category,
+          images: image ? [image] : [],
+          location: 'Nigeria',
+          date: new Date().toISOString().slice(0, 10),
+          description: title,
+          sellerId: currentUser.id,
+        };
+      }).filter(p => p.title && p.price > 0 && p.images.length > 0);
+
+      if (!mapped.length) {
+        setImportMessage('No valid rows found. Required columns: title/name/data, price/data6, and image/image2.');
+      } else {
+        const result = await onImportProducts(mapped);
+        setImportMessage(`Imported ${result.created} products${result.skipped > 0 ? `, skipped ${result.skipped}` : ''}.`);
+      }
+    } catch {
+      setImportMessage('Failed to read file. Upload CSV/TSV export (not raw .xlsx binary).');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
   };
 
   const tabs: { id: AdminTab; label: string; badge?: number }[] = [
@@ -560,7 +719,82 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="All">All Categories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              <select
+                value={bulkCategoryChoice}
+                onChange={e => setBulkCategoryChoice(e.target.value)}
+                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+                title="Apply one category to all rows (or keep auto)"
+              >
+                <option value="__auto__">Auto category (from file/title)</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">Price +%</span>
+                {[0, 10, 25, 50, 75, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => setImportPriceIncreasePct(pct)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
+                      importPriceIncreasePct === pct
+                        ? 'bg-green-500 text-white'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {pct === 0 ? '0' : `+${pct}`}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={importPriceIncreasePct}
+                  onChange={e => {
+                    const next = Number(e.target.value);
+                    if (!Number.isFinite(next)) return;
+                    setImportPriceIncreasePct(Math.max(0, Math.min(100, Math.round(next))));
+                  }}
+                  className="w-16 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+                  title="Enter custom price increase percentage (0-100)"
+                />
+              </div>
+              <div className="flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-2 py-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-1">+₦</span>
+                {[0, 500, 1000, 1500, 2000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setImportPriceIncreaseNaira(amt)}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md transition-colors ${
+                      importPriceIncreaseNaira === amt
+                        ? 'bg-green-500 text-white'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {amt}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={importPriceIncreaseNaira}
+                  onChange={e => {
+                    const next = Number(e.target.value);
+                    if (!Number.isFinite(next)) return;
+                    setImportPriceIncreaseNaira(Math.max(0, Math.round(next)));
+                  }}
+                  className="w-20 px-2 py-1 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+                  title="Enter fixed Naira value to add to every imported product"
+                />
+              </div>
+              <label className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 cursor-pointer hover:border-green-400">
+                {importing ? 'Importing…' : 'Import file'}
+                <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" className="hidden" onChange={handleImportFile} disabled={importing} />
+              </label>
             </div>
+            {importMessage && <p className="text-xs text-gray-500 dark:text-gray-400">{importMessage}</p>}
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800">
