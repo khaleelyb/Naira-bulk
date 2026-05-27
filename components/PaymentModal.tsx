@@ -1,15 +1,14 @@
-// components/PaymentModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, User } from '../types';
 import { initiatePayment, verifyPayment } from '../services/paymentService';
 import { Icon } from './Icon';
 
-const KORAPAY_PUBLIC_KEY = import.meta.env.VITE_KORAPAY_PUBLIC_KEY ?? 'pk_test_xxxxxxxxxxxx';
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ?? '';
 
 declare global {
   interface Window {
-    Korapay?: {
-      initialize: (config: object) => void;
+    PaystackPop?: {
+      setup: (config: object) => { openIframe: () => void };
     };
   }
 }
@@ -21,19 +20,12 @@ interface PaymentModalProps {
   currentUser: User;
   onPaymentSuccess: (reference: string) => void;
   onSaveBuyerDetails?: (email: string, address: string, phone: string, name: string) => void;
-  selectedSize?: string;
 }
 
 type Step = 'form' | 'processing' | 'success' | 'failed';
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
-  isOpen,
-  onClose,
-  product,
-  currentUser,
-  onPaymentSuccess,
-  onSaveBuyerDetails,
-  selectedSize,
+  isOpen, onClose, product, currentUser, onPaymentSuccess, onSaveBuyerDetails,
 }) => {
   const [step, setStep] = useState<Step>('form');
   const [name, setName] = useState(currentUser.name ?? '');
@@ -44,11 +36,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [successRef, setSuccessRef] = useState('');
   const scriptLoaded = useRef(false);
 
-  // Load KoraPay script once
   useEffect(() => {
     if (scriptLoaded.current) return;
     const script = document.createElement('script');
-    script.src = 'https://korablobstorage.blob.core.windows.net/modal-bucket/korapay-collections.min.js';
+    script.src = 'https://js.paystack.co/v1/inline.js';
     script.async = true;
     script.onload = () => { scriptLoaded.current = true; };
     document.body.appendChild(script);
@@ -71,7 +62,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!name.trim()) { setErrorMsg('Please enter your full name.'); return; }
     if (!phone.trim() || phone.trim().length < 7) { setErrorMsg('Please enter a valid phone number.'); return; }
     if (!email.trim() || !email.includes('@')) { setErrorMsg('Please enter a valid email address.'); return; }
@@ -80,13 +70,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setStep('processing');
     setErrorMsg('');
 
-    const productTitle = selectedSize
-      ? `${product.title} (Size ${selectedSize})`
-      : product.title;
-
     const result = await initiatePayment({
       productId: product.id,
-      productTitle,
+      productTitle: product.title,
       amount: product.price,
       buyerId: currentUser.id,
       buyerName: name.trim(),
@@ -101,185 +87,131 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
-    // Wait for KoraPay script
     let attempts = 0;
-    while (!window.Korapay && attempts < 20) {
+    while (!window.PaystackPop && attempts < 20) {
       await new Promise(r => setTimeout(r, 150));
       attempts++;
     }
 
-    if (!window.Korapay) {
+    if (!window.PaystackPop) {
       setErrorMsg('Payment script failed to load. Please refresh and try again.');
       setStep('form');
       return;
     }
 
-    window.Korapay.initialize({
-      key: KORAPAY_PUBLIC_KEY,
-      reference: result.reference,
-      amount: result.amount,
-      currency: result.currency,
-      customer: result.customer,
-      narration: `Payment for "${result.productTitle}" on Kano Market`,
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: email.trim(),
+      amount: result.amount * 100, // Paystack uses kobo
+      currency: 'NGN',
+      ref: result.reference,
+      metadata: {
+        custom_fields: [
+          { display_name: 'Product', variable_name: 'product', value: product.title },
+          { display_name: 'Phone', variable_name: 'phone', value: phone.trim() },
+          { display_name: 'Address', variable_name: 'address', value: address.trim() },
+        ],
+      },
       onClose: () => { setStep('form'); },
-      onSuccess: async (data: { reference: string }) => {
-        const verification = await verifyPayment(data.reference);
+      callback: async (response: { reference: string }) => {
+        const verification = await verifyPayment(response.reference);
         if (verification?.status === 'success') {
-          setSuccessRef(data.reference);
+          setSuccessRef(response.reference);
           setStep('success');
-          onPaymentSuccess(data.reference);
-          // ← save details silently
+          onPaymentSuccess(response.reference);
           onSaveBuyerDetails?.(email.trim(), address.trim(), phone.trim(), name.trim());
         } else {
           setStep('failed');
         }
       },
-      onFailed: () => { setStep('failed'); },
     });
+
+    handler.openIframe();
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-gray-800 overflow-hidden">
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Complete Purchase</h2>
             <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[260px]">{product.title}</p>
           </div>
-          <button
-            onClick={onClose}
-            disabled={step === 'processing'}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all disabled:opacity-50"
-          >
+          <button onClick={onClose} disabled={step === 'processing'}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all disabled:opacity-30">
             <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Product summary strip */}
-        <div className="flex flex-col gap-2 px-6 py-3 bg-orange-50 dark:bg-orange-900/10">
-          <div className="flex items-center gap-3">
-            {product.images?.[0] && (
-              <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{product.title}</p>
-              <p className="text-xs text-gray-400">{product.location}</p>
-            </div>
-            <p className="text-xl font-bold text-orange-600 dark:text-orange-400 flex-shrink-0">
-              ₦{product.price.toLocaleString()}
-            </p>
-          </div>
-          {selectedSize && (
-            <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full w-fit">
-              Size: {selectedSize}
-            </span>
+        {/* Product strip */}
+        <div className="flex items-center gap-3 px-6 py-3 bg-green-50 dark:bg-green-900/10">
+          {product.images?.[0] && (
+            <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
           )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{product.title}</p>
+            <p className="text-xs text-gray-400">{product.location}</p>
+          </div>
+          <p className="text-xl font-bold text-green-600 dark:text-green-400 flex-shrink-0">
+            ₦{product.price.toLocaleString()}
+          </p>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
 
-          {/* ── Checkout form ── */}
           {step === 'form' && (
             <form onSubmit={handlePay} className="space-y-4">
+              {[
+                { label: 'Full Name', value: name, set: setName, type: 'text', ph: 'Aminu Musa' },
+                { label: 'Phone Number', value: phone, set: setPhone, type: 'tel', ph: '+234 800 000 0000' },
+                { label: 'Email', value: email, set: setEmail, type: 'email', ph: 'you@example.com', note: 'for receipt' },
+              ].map(({ label, value, set, type, ph, note }) => (
+                <div key={label}>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    {label}
+                    {note && <span className="ml-1.5 text-xs font-normal text-gray-400">({note})</span>}
+                  </label>
+                  <input type={type} value={value} onChange={e => { (set as any)(e.target.value); setErrorMsg(''); }}
+                    placeholder={ph}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
+                    required autoFocus={label === 'Full Name'} />
+                </div>
+              ))}
 
-              {/* Full Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Aminu Musa"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
-                  required
-                  autoFocus
-                />
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Delivery Address</label>
+                <textarea value={address} onChange={e => { setAddress(e.target.value); setErrorMsg(''); }}
+                  placeholder="House number, street, area, city…" rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all resize-none"
+                  required />
               </div>
 
-              {/* Phone Number */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="+234 800 000 0000"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
-                  required
-                />
-              </div>
+              {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
 
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Email
-                  <span className="ml-1.5 text-xs font-normal text-gray-400">(for receipt)</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
-                  required
-                />
-              </div>
-
-              {/* Delivery Address */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Delivery Address
-                </label>
-                <textarea
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  placeholder="House number, street, area, city…"
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all resize-none"
-                  required
-                />
-              </div>
-
-              {errorMsg && (
-                <p className="text-sm text-red-500 dark:text-red-400">{errorMsg}</p>
-              )}
-
-              <button
-                type="submit"
-                className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md shadow-orange-200 dark:shadow-orange-900/30"
-              >
+              <button type="submit"
+                className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30">
                 Pay ₦{product.price.toLocaleString()}
               </button>
 
-              <p className="text-center text-xs text-gray-400 dark:text-gray-500">
-                Secured by{' '}
-                <span className="font-semibold text-gray-600 dark:text-gray-400">KoraPay</span>
-                {' '}· Cards, Bank Transfer & More
+              <p className="text-center text-xs text-gray-400">
+                Secured by <span className="font-semibold text-gray-600 dark:text-gray-400">Paystack</span> · Cards, Bank Transfer, USSD & More
               </p>
             </form>
           )}
 
-          {/* ── Processing ── */}
           {step === 'processing' && (
             <div className="flex flex-col items-center py-8 gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500" />
+              <div className="w-12 h-12 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500" />
               </div>
               <div className="text-center">
                 <p className="font-semibold text-gray-800 dark:text-gray-200">Opening payment window…</p>
-                <p className="text-sm text-gray-400 mt-1">Complete your payment in the KoraPay window</p>
+                <p className="text-sm text-gray-400 mt-1">Complete your payment in the Paystack window</p>
               </div>
             </div>
           )}
 
-          {/* ── Success ── */}
           {step === 'success' && (
             <div className="flex flex-col items-center py-8 gap-4">
               <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
@@ -290,20 +222,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <div className="text-center">
                 <p className="font-bold text-gray-900 dark:text-white text-lg">Payment Successful!</p>
                 <p className="text-sm text-gray-400 mt-1">Your order has been placed. The seller will contact you shortly.</p>
-                {successRef && (
-                  <p className="text-xs text-gray-300 dark:text-gray-600 mt-2 font-mono break-all">{successRef}</p>
-                )}
+                {successRef && <p className="text-xs text-gray-300 dark:text-gray-600 mt-2 font-mono break-all">{successRef}</p>}
               </div>
-              <button
-                onClick={onClose}
-                className="mt-2 bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors"
-              >
+              <button onClick={onClose} className="mt-2 bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors">
                 Done
               </button>
             </div>
           )}
 
-          {/* ── Failed ── */}
           {step === 'failed' && (
             <div className="flex flex-col items-center py-8 gap-4">
               <div className="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
@@ -316,16 +242,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <p className="text-sm text-gray-400 mt-1">Something went wrong. Please try again.</p>
               </div>
               <div className="flex gap-3 mt-2">
-                <button
-                  onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
+                <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   Cancel
                 </button>
-                <button
-                  onClick={() => setStep('form')}
-                  className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
-                >
+                <button onClick={() => setStep('form')} className="px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors">
                   Try Again
                 </button>
               </div>
