@@ -3,11 +3,13 @@ import { CartItem, Product, User } from '../types';
 import { supabase } from '../services/supabase_client';
 import { initiateCartPayment, verifyPayment } from '../services/paymentService';
 
-const KORAPAY_PUBLIC_KEY = import.meta.env.VITE_KORAPAY_PUBLIC_KEY ?? '';
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ?? '';
 
 declare global {
   interface Window {
-    Korapay?: { initialize: (config: object) => void };
+    PaystackPop?: {
+      setup: (config: object) => { openIframe: () => void };
+    };
   }
 }
 
@@ -215,12 +217,12 @@ export const CartPage: React.FC<CartPageProps> = ({
 
   // Load Korapay script once
   useEffect(() => {
-    if (document.querySelector('script[src*="korapay"]')) return;
-    const s = document.createElement('script');
-    s.src = 'https://korablobstorage.blob.core.windows.net/modal-bucket/korapay-collections.min.js';
-    s.async = true;
-    document.body.appendChild(s);
-  }, []);
+  if (document.querySelector('script[src*="paystack"]')) return;
+  const s = document.createElement('script');
+  s.src = 'https://js.paystack.co/v1/inline.js';
+  s.async = true;
+  document.body.appendChild(s);
+}, []);
 
   const loadOrders = () => {
     if (!currentUser) return;
