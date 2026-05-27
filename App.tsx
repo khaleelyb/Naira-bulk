@@ -492,18 +492,22 @@ const handleChangePassword = async (currentPassword: string, newPassword: string
     setMessageModal({ isOpen: true, product });
   };
 
-  const handleAddToCart = (product: Product) => {
+ const handleAddToCart = (product: Product, size?: string) => {
   if (!currentUser) { setAuthModal({ isOpen: true, view: 'login' }); return; }
-  if (!CART_CATEGORIES.has(product.category)) {
+  if (!CART_CATEGORIES.has(product.category) && !SIZE_CATEGORIES[product.category]) {
     showToast('This item cannot be added to cart.');
     return;
   }
   setCartItems(prev => {
-    const existing = prev.find(i => i.product.id === product.id);
-    if (existing) return prev.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
-    return [...prev, { product, quantity: 1 }];
+    const key = `${product.id}-${size ?? ''}`;
+    const existing = prev.find(i => i.product.id === product.id && i.selectedSize === size);
+    if (existing) return prev.map(i =>
+      i.product.id === product.id && i.selectedSize === size
+        ? { ...i, quantity: i.quantity + 1 } : i
+    );
+    return [...prev, { product, quantity: 1, selectedSize: size }];
   });
-  showToast('Added to cart!');
+  showToast(size ? `Added to cart (size ${size})!` : 'Added to cart!');
 };
 
 const handleUpdateCartQuantity = (productId: string, quantity: number) => {
