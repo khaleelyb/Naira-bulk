@@ -20,7 +20,8 @@ interface PaymentModalProps {
   product: Product;
   currentUser: User;
   onPaymentSuccess: (reference: string) => void;
-onSaveBuyerDetails?: (email: string, address: string, phone: string, name: string) => void;
+  onSaveBuyerDetails?: (email: string, address: string, phone: string, name: string) => void;
+  selectedSize?: string;
 }
 
 type Step = 'form' | 'processing' | 'success' | 'failed';
@@ -31,12 +32,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   product,
   currentUser,
   onPaymentSuccess,
+  onSaveBuyerDetails,
+  selectedSize,
 }) => {
   const [step, setStep] = useState<Step>('form');
   const [name, setName] = useState(currentUser.name ?? '');
   const [phone, setPhone] = useState(currentUser.phone ?? '');
   const [email, setEmail] = useState(currentUser.email ?? '');
-const [address, setAddress] = useState(currentUser.address ?? '');
+  const [address, setAddress] = useState(currentUser.address ?? '');
   const [errorMsg, setErrorMsg] = useState('');
   const [successRef, setSuccessRef] = useState('');
   const scriptLoaded = useRef(false);
@@ -57,7 +60,7 @@ const [address, setAddress] = useState(currentUser.address ?? '');
         setStep('form');
         setErrorMsg('');
         setEmail(currentUser.email ?? '');
-setAddress(currentUser.address ?? '');
+        setAddress(currentUser.address ?? '');
         setName(currentUser.name ?? '');
         setPhone(currentUser.phone ?? '');
       }, 300);
@@ -77,9 +80,13 @@ setAddress(currentUser.address ?? '');
     setStep('processing');
     setErrorMsg('');
 
+    const productTitle = selectedSize
+      ? `${product.title} (Size ${selectedSize})`
+      : product.title;
+
     const result = await initiatePayment({
       productId: product.id,
-      productTitle: product.title,
+      productTitle,
       amount: product.price,
       buyerId: currentUser.id,
       buyerName: name.trim(),
@@ -116,17 +123,17 @@ setAddress(currentUser.address ?? '');
       narration: `Payment for "${result.productTitle}" on Kano Market`,
       onClose: () => { setStep('form'); },
       onSuccess: async (data: { reference: string }) => {
-  const verification = await verifyPayment(data.reference);
-  if (verification?.status === 'success') {
-    setSuccessRef(data.reference);
-    setStep('success');
-    onPaymentSuccess(data.reference);
-    // ← save details silently
-    onSaveBuyerDetails?.(email.trim(), address.trim(), phone.trim(), name.trim());
-  } else {
-    setStep('failed');
-  }
-},
+        const verification = await verifyPayment(data.reference);
+        if (verification?.status === 'success') {
+          setSuccessRef(data.reference);
+          setStep('success');
+          onPaymentSuccess(data.reference);
+          // ← save details silently
+          onSaveBuyerDetails?.(email.trim(), address.trim(), phone.trim(), name.trim());
+        } else {
+          setStep('failed');
+        }
+      },
       onFailed: () => { setStep('failed'); },
     });
   };
@@ -144,24 +151,31 @@ setAddress(currentUser.address ?? '');
           <button
             onClick={onClose}
             disabled={step === 'processing'}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all disabled:opacity-30"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all disabled:opacity-50"
           >
             <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
 
         {/* Product summary strip */}
-        <div className="flex items-center gap-3 px-6 py-3 bg-orange-50 dark:bg-orange-900/10">
-          {product.images?.[0] && (
-            <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{product.title}</p>
-            <p className="text-xs text-gray-400">{product.location}</p>
+        <div className="flex flex-col gap-2 px-6 py-3 bg-orange-50 dark:bg-orange-900/10">
+          <div className="flex items-center gap-3">
+            {product.images?.[0] && (
+              <img src={product.images[0]} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{product.title}</p>
+              <p className="text-xs text-gray-400">{product.location}</p>
+            </div>
+            <p className="text-xl font-bold text-orange-600 dark:text-orange-400 flex-shrink-0">
+              ₦{product.price.toLocaleString()}
+            </p>
           </div>
-          <p className="text-xl font-bold text-orange-600 dark:text-orange-400 flex-shrink-0">
-            ₦{product.price.toLocaleString()}
-          </p>
+          {selectedSize && (
+            <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full w-fit">
+              Size: {selectedSize}
+            </span>
+          )}
         </div>
 
         {/* Body */}
@@ -181,7 +195,7 @@ setAddress(currentUser.address ?? '');
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="Aminu Musa"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
                   required
                   autoFocus
                 />
@@ -197,7 +211,7 @@ setAddress(currentUser.address ?? '');
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="+234 800 000 0000"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
                   required
                 />
               </div>
@@ -213,7 +227,7 @@ setAddress(currentUser.address ?? '');
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all"
                   required
                 />
               </div>
@@ -228,7 +242,7 @@ setAddress(currentUser.address ?? '');
                   onChange={e => setAddress(e.target.value)}
                   placeholder="House number, street, area, city…"
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400/50 transition-all resize-none"
                   required
                 />
               </div>
