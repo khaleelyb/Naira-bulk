@@ -131,8 +131,12 @@ const App: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    if (!selectedProduct && scrollPosition.current > 0) window.scrollTo(0, scrollPosition.current);
-  }, [selectedProduct]);
+  if (selectedProduct) {
+    window.scrollTo(0, 0);
+  } else if (scrollPosition.current > 0) {
+    window.scrollTo(0, scrollPosition.current);
+  }
+}, [selectedProduct]);
 // Realtime: new products
 useEffect(() => {
   const channel = supabase
