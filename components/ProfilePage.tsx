@@ -30,6 +30,7 @@ interface ProfilePageProps {
   setTheme: (theme: Theme) => void;
   onSetPin: () => void;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  onImportProducts: (items: Omit<Product, 'id'>[]) => Promise<{ created: number; skipped: number }>;
 }
 
 const ThemeSelector: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => (
@@ -66,6 +67,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [showTerms, setShowTerms] = useState(false);
   const [listingCategoryFilter, setListingCategoryFilter] = useState('All');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+const [importMessage, setImportMessage] = useState<string | null>(null);
 
   if (!currentUser) {
     return <div className="text-center py-20"><p>Please log in to see your profile.</p></div>;
@@ -83,7 +86,103 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       reader.readAsDataURL(file);
     }
   };
+const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  setImportMessage(null);
+  setImporting(true);
 
+  try {
+    const rawText = await file.text();
+    if (!rawText || rawText.length < 3) {
+      setImportMessage('File is empty.');
+      setImporting(false);
+      return;
+    }
+
+    const rows = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const firstRow = rows[0] || '';
+    const delimiter: ',' | '\t' = firstRow.includes('\t') ? '\t' : ',';
+
+    const parseDelimited = (line: string): string[] => {
+      const out: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+          else inQuotes = !inQuotes;
+        } else if (ch === delimiter && !inQuotes) {
+          out.push(current.trim()); current = '';
+        } else { current += ch; }
+      }
+      out.push(current.trim());
+      return out;
+    };
+
+    const headers = parseDelimited(firstRow).map(h => h.toLowerCase().trim());
+    const dataRows = rows.slice(1);
+
+    const idx = {
+      title:       headers.findIndex(h => ['title', 'name', 'product'].includes(h)),
+      price:       headers.findIndex(h => ['price', 'amount'].includes(h)),
+      category:    headers.findIndex(h => ['category', 'cat', 'type'].includes(h)),
+      description: headers.findIndex(h => ['description', 'desc', 'details'].includes(h)),
+      image:       headers.findIndex(h => ['image', 'image_url', 'photo', 'thumbnail'].includes(h)),
+    };
+
+    if (idx.title === -1 || idx.price === -1) {
+      setImportMessage('Missing required columns: title and price.');
+      setImporting(false);
+      return;
+    }
+
+    const mapped: Omit<Product, 'id'>[] = dataRows.map(rowLine => {
+      const cols = parseDelimited(rowLine);
+      const title = String(cols[idx.title] ?? '').trim();
+      const rawPrice = String(cols[idx.price] ?? '').replace(/[^\d.]/g, '');
+      const price = parseFloat(rawPrice);
+      const category = idx.category >= 0
+        ? String(cols[idx.category] ?? '').trim() || 'General'
+        : 'General';
+      const description = idx.description >= 0
+        ? String(cols[idx.description] ?? '').trim() || title
+        : title;
+      const imageRaw = idx.image >= 0 ? String(cols[idx.image] ?? '').trim() : '';
+      const imageMatch = imageRaw.match(/https?:\/\/[^\s"']+/i);
+      const image = imageMatch ? imageMatch[0] : '';
+
+      return {
+        title,
+        price: isFinite(price) ? price : 0,
+        category,
+        description,
+        images: image ? [image] : [],
+        location: 'Nationwide',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sellerId: currentUser!.id,
+      };
+    }).filter(p => p.title && p.price > 0);
+
+    if (!mapped.length) {
+      setImportMessage('No valid rows found. Check your columns: title, price, category, description, image.');
+      setImporting(false);
+      return;
+    }
+
+    const result = await onImportProducts(mapped);
+    setImportMessage(
+      `Imported ${result.created} product${result.created !== 1 ? 's' : ''}${result.skipped > 0 ? `, skipped ${result.skipped}` : ''}.`
+    );
+  } catch {
+    setImportMessage('Failed to read file. Please upload a valid CSV or TSV.');
+  } finally {
+    setImporting(false);
+    e.target.value = '';
+  }
+};
+  
   const isSeller = currentUser.isApprovedSeller && !currentUser.isAdmin;
   const isAdmin = currentUser.isAdmin;
   const listingCategories = Array.from(new Set([...CATEGORIES, ...userProducts.map(p => p.category)]));
@@ -304,6 +403,69 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
       </div>
 
+      {(isSeller || isAdmin) && (
+  <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div className="px-4 py-3.5 border-b border-gray-50 dark:border-gray-800">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Bulk Import Products</p>
+    </div>
+
+    <div className="px-4 py-4 space-y-3">
+      {/* Format hint */}
+      <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-mono leading-relaxed">
+        title,price,category,description,image<br />
+        iPhone 14 Pro,450000,Mobile Phones & Tablets,Brand new sealed,https://...<br />
+        Nike Air Max,35000,Men shoes,Size 42 available,https://...
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors border ${
+          importing
+            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+            : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40'
+        }`}>
+          {importing ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500" />
+              Importing…
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Choose CSV / TSV file
+            </>
+          )}
+          <input
+            type="file"
+            accept=".csv,.tsv,.txt"
+            className="hidden"
+            onChange={handleImportFile}
+            disabled={importing}
+          />
+        </label>
+
+        {importMessage && (
+          <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl border ${
+            importMessage.startsWith('Imported')
+              ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+          }`}>
+            {importMessage.startsWith('Imported')
+              ? <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+              : <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+            }
+            {importMessage}
+          </div>
+        )}
+      </div>
+
+      <p className="text-xs text-gray-400">
+        Required columns: <span className="font-mono text-gray-500">title</span>, <span className="font-mono text-gray-500">price</span> · Optional: <span className="font-mono text-gray-500">category</span>, <span className="font-mono text-gray-500">description</span>, <span className="font-mono text-gray-500">image</span>
+      </p>
+    </div>
+  </div>
+)}
       {/* My Listings */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
