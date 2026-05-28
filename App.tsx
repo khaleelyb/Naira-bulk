@@ -717,6 +717,7 @@ case 'cart':
         setTheme={setTheme}
         onSetPin={() => setPinModal({ isOpen: true, mode: 'setup' })}  // ✅ added here
         onChangePassword={handleChangePassword}   // ← ADD THIS LINE
+        onImportProducts={handleAdminImportProducts}
       />
     )
     : (
