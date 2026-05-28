@@ -59,6 +59,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 const [sizeError, setSizeError] = useState(false);
 const needsSize = !!SIZE_CATEGORIES[product.category];
 
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
+  
   const images = product.images && product.images.length > 0 ? product.images : [];
 
   // Only admins can see phone number, WhatsApp, and Call buttons
