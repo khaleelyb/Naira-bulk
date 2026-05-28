@@ -69,6 +69,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 const [importMessage, setImportMessage] = useState<string | null>(null);
+const [bulkCategoryChoice, setBulkCategoryChoice] = useState<string>('__auto__');
+const [importPriceIncreasePct, setImportPriceIncreasePct] = useState<number>(0);
+const [importPriceIncreaseNaira, setImportPriceIncreaseNaira] = useState<number>(0);
 
   if (!currentUser) {
     return <div className="text-center py-20"><p>Please log in to see your profile.</p></div>;
@@ -86,6 +89,7 @@ const [importMessage, setImportMessage] = useState<string | null>(null);
       reader.readAsDataURL(file);
     }
   };
+  
 const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -95,7 +99,7 @@ const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
   try {
     const rawText = await file.text();
     if (!rawText || rawText.length < 3) {
-      setImportMessage('File is empty.');
+      setImportMessage('File is empty. Please upload a CSV or TSV.');
       setImporting(false);
       return;
     }
@@ -125,37 +129,62 @@ const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const dataRows = rows.slice(1);
 
     const idx = {
-      title:       headers.findIndex(h => ['title', 'name', 'product'].includes(h)),
-      price:       headers.findIndex(h => ['price', 'amount'].includes(h)),
-      category:    headers.findIndex(h => ['category', 'cat', 'type'].includes(h)),
+      title:       headers.findIndex(h => ['title', 'name', 'product', 'data'].includes(h)),
+      price:       headers.findIndex(h => ['price', 'amount', 'data6'].includes(h)),
+      image:       headers.findIndex(h => ['image', 'image_url', 'thumbnail', 'photo', 'image2'].includes(h)),
+      category:    headers.findIndex(h => ['category', 'cat', 'type', 'group'].includes(h)),
       description: headers.findIndex(h => ['description', 'desc', 'details'].includes(h)),
-      image:       headers.findIndex(h => ['image', 'image_url', 'photo', 'thumbnail'].includes(h)),
     };
 
-    if (idx.title === -1 || idx.price === -1) {
-      setImportMessage('Missing required columns: title and price.');
-      setImporting(false);
-      return;
-    }
+    const normalizeImageUrl = (url: string): string =>
+      url
+        .replace(/\/w\/150(\/|$)/i, '/w/900$1')
+        .replace(/\/q\/50(\/|$)/i, '/q/90$1')
+        .replace(/format\/avif/i, 'format/jpeg')
+        .replace(/\.\d{2,4}x\d{2,4}(\.(jpg|jpeg|png|webp))$/i, '.1000x1000$1');
+
+    const pickImage = (candidates: unknown[]): string => {
+      for (const raw of candidates) {
+        const txt = String(raw ?? '').trim();
+        if (!txt) continue;
+        const match = txt.match(/https?:\/\/[^\s"']+/i);
+        if (match?.[0]) return normalizeImageUrl(match[0]);
+      }
+      return '';
+    };
+
+    const inferCategory = (rawCat: unknown, title: string): string => {
+      const explicit = String(rawCat ?? '').trim();
+      if (explicit && explicit.toLowerCase() !== 'general') return explicit;
+      const lower = title.toLowerCase();
+      if (lower.includes('phone') || lower.includes('iphone')) return 'Mobile Phones & Tablets';
+      if (lower.includes('laptop') || lower.includes('computer')) return 'Computers';
+      if (lower.includes('shoe') || lower.includes('sneaker')) return 'Men shoes';
+      if (lower.includes('dress') || lower.includes('shirt')) return 'Women clothes';
+      if (lower.includes('watch')) return 'Watches and jewelries';
+      if (lower.includes('bag')) return 'Home, Furniture & Appliances';
+      return 'General';
+    };
 
     const mapped: Omit<Product, 'id'>[] = dataRows.map(rowLine => {
       const cols = parseDelimited(rowLine);
-      const title = String(cols[idx.title] ?? '').trim();
-      const rawPrice = String(cols[idx.price] ?? '').replace(/[^\d.]/g, '');
+      const title = String(cols[idx.title] ?? cols[2] ?? '').trim();
+      const rawPrice = String(cols[idx.price] ?? cols[3] ?? '').replace(/[^\d.]/g, '');
       const price = parseFloat(rawPrice);
-      const category = idx.category >= 0
-        ? String(cols[idx.category] ?? '').trim() || 'General'
-        : 'General';
+      const adjustedPrice = isFinite(price) && price > 0
+        ? Math.max(0, Math.round((price * (1 + importPriceIncreasePct / 100)) + importPriceIncreaseNaira))
+        : 0;
+      const category = bulkCategoryChoice === '__auto__'
+        ? inferCategory(cols[idx.category], title)
+        : bulkCategoryChoice;
       const description = idx.description >= 0
         ? String(cols[idx.description] ?? '').trim() || title
         : title;
-      const imageRaw = idx.image >= 0 ? String(cols[idx.image] ?? '').trim() : '';
-      const imageMatch = imageRaw.match(/https?:\/\/[^\s"']+/i);
-      const image = imageMatch ? imageMatch[0] : '';
+      const image = pickImage([cols[5], idx.image >= 0 ? cols[idx.image] : '', cols[4]]);
 
       return {
         title,
-        price: isFinite(price) ? price : 0,
+        price: adjustedPrice,
         category,
         description,
         images: image ? [image] : [],
@@ -163,10 +192,10 @@ const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         sellerId: currentUser!.id,
       };
-    }).filter(p => p.title && p.price > 0);
+    }).filter(p => p.title && p.price > 0 && p.images.length > 0);
 
     if (!mapped.length) {
-      setImportMessage('No valid rows found. Check your columns: title, price, category, description, image.');
+      setImportMessage('No valid rows found. Required columns: title/name, price, and image.');
       setImporting(false);
       return;
     }
@@ -176,7 +205,7 @@ const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
       `Imported ${result.created} product${result.created !== 1 ? 's' : ''}${result.skipped > 0 ? `, skipped ${result.skipped}` : ''}.`
     );
   } catch {
-    setImportMessage('Failed to read file. Please upload a valid CSV or TSV.');
+    setImportMessage('Failed to read file. Upload a CSV or TSV export.');
   } finally {
     setImporting(false);
     e.target.value = '';
@@ -404,65 +433,145 @@ const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
       {(isSeller || isAdmin) && (
-  <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-    <div className="px-4 py-3.5 border-b border-gray-50 dark:border-gray-800">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Bulk Import Products</p>
+  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+
+    {/* Header */}
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
+        <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+        </svg>
+      </div>
+      <div>
+        <p className="text-sm font-bold text-gray-900 dark:text-white">Import Products</p>
+        <p className="text-xs text-gray-400">CSV or TSV · required columns: title/name, price, image</p>
+      </div>
     </div>
 
-    <div className="px-4 py-4 space-y-3">
-      {/* Format hint */}
-      <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-mono leading-relaxed">
-        title,price,category,description,image<br />
-        iPhone 14 Pro,450000,Mobile Phones & Tablets,Brand new sealed,https://...<br />
-        Nike Air Max,35000,Men shoes,Size 42 available,https://...
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors border ${
-          importing
-            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 cursor-not-allowed'
-            : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/40'
-        }`}>
-          {importing ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500" />
-              Importing…
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              Choose CSV / TSV file
-            </>
-          )}
-          <input
-            type="file"
-            accept=".csv,.tsv,.txt"
-            className="hidden"
-            onChange={handleImportFile}
-            disabled={importing}
-          />
+      {/* Assign category */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+          Assign category
         </label>
-
-        {importMessage && (
-          <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl border ${
-            importMessage.startsWith('Imported')
-              ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
-          }`}>
-            {importMessage.startsWith('Imported')
-              ? <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-              : <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
-            }
-            {importMessage}
-          </div>
-        )}
+        <select
+          value={bulkCategoryChoice}
+          onChange={e => setBulkCategoryChoice(e.target.value)}
+          className="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
+        >
+          <option value="__auto__">Auto-detect from file</option>
+          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
       </div>
 
-      <p className="text-xs text-gray-400">
-        Required columns: <span className="font-mono text-gray-500">title</span>, <span className="font-mono text-gray-500">price</span> · Optional: <span className="font-mono text-gray-500">category</span>, <span className="font-mono text-gray-500">description</span>, <span className="font-mono text-gray-500">image</span>
-      </p>
+      {/* Price markup % */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+          Price markup (%)
+        </label>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 flex-wrap">
+            {[0, 10, 25, 50].map(pct => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => setImportPriceIncreasePct(pct)}
+                className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border ${
+                  importPriceIncreasePct === pct
+                    ? 'bg-green-500 text-white border-green-500'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-300'
+                }`}
+              >
+                {pct === 0 ? '0%' : `+${pct}%`}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number" min={0} max={200} step={1}
+            value={importPriceIncreasePct}
+            onChange={e => setImportPriceIncreasePct(Math.max(0, Math.round(Number(e.target.value))))}
+            className="w-16 px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+            placeholder="%"
+          />
+        </div>
+      </div>
+
+      {/* Fixed naira markup */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+          Fixed markup (₦)
+        </label>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 flex-wrap">
+            {[0, 500, 1000, 2000].map(amt => (
+              <button
+                key={amt}
+                type="button"
+                onClick={() => setImportPriceIncreaseNaira(amt)}
+                className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border ${
+                  importPriceIncreaseNaira === amt
+                    ? 'bg-green-500 text-white border-green-500'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-green-300'
+                }`}
+              >
+                {amt === 0 ? '₦0' : `+₦${amt}`}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number" min={0} step={100}
+            value={importPriceIncreaseNaira}
+            onChange={e => setImportPriceIncreaseNaira(Math.max(0, Math.round(Number(e.target.value))))}
+            className="w-20 px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-green-400"
+            placeholder="₦"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Upload button + feedback */}
+    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+      <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-colors border ${
+        importing
+          ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+          : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40'
+      }`}>
+        {importing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+            Importing…
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            Choose file to import
+          </>
+        )}
+        <input
+          type="file"
+          accept=".csv,.tsv,.txt"
+          className="hidden"
+          onChange={handleImportFile}
+          disabled={importing}
+        />
+      </label>
+
+      {importMessage && (
+        <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl border ${
+          importMessage.startsWith('Imported')
+            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+            : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+        }`}>
+          {importMessage.startsWith('Imported')
+            ? <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            : <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+          }
+          {importMessage}
+        </div>
+      )}
     </div>
   </div>
 )}
