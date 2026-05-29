@@ -59,6 +59,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>(db.getTheme);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const scrollPosition = useRef(0);
+  const shouldRestoreScroll = useRef(false);
 
   // Modals
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
@@ -130,17 +131,37 @@ const App: React.FC = () => {
     } else { document.documentElement.classList.remove('dark'); }
   }, [theme]);
 
-// AFTER (fixed)
+useEffect(() => {
+  if (!('scrollRestoration' in window.history)) return;
+
+  const previousScrollRestoration = window.history.scrollRestoration;
+  window.history.scrollRestoration = 'manual';
+
+  return () => {
+    window.history.scrollRestoration = previousScrollRestoration;
+  };
+}, []);
+
 useEffect(() => {
   if (selectedProduct) {
+    shouldRestoreScroll.current = true;
     window.scrollTo(0, 0);
-  } else if (scrollPosition.current > 0) {
-    const pos = scrollPosition.current;
-    const timer = setTimeout(() => {
-      window.scrollTo(0, pos);
-    }, 50);
-    return () => clearTimeout(timer);
+    return;
   }
+
+  if (!shouldRestoreScroll.current || scrollPosition.current <= 0) return;
+
+  const pos = scrollPosition.current;
+  const restoreScroll = () => window.scrollTo(0, pos);
+  const animationFrameId = window.requestAnimationFrame(restoreScroll);
+  const timer = window.setTimeout(restoreScroll, 100);
+
+  shouldRestoreScroll.current = false;
+
+  return () => {
+    window.cancelAnimationFrame(animationFrameId);
+    window.clearTimeout(timer);
+  };
 }, [selectedProduct]);
 
   // Realtime: new products
