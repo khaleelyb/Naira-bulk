@@ -10,7 +10,6 @@
       "DOM.Iterable"
     ],
     "skipLibCheck": true,
-    
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -23,5 +22,8 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "supabase/functions"
+  ]
 }

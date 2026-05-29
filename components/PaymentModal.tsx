@@ -8,7 +8,10 @@ const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ?? '';
 declare global {
   interface Window {
     PaystackPop?: {
-      setup: (config: object) => { openIframe: () => void };
+      new (): {
+        resumeTransaction: (accessCode: string, callbacks?: object) => void;
+        newTransaction: (config: object) => void;
+      };
     };
   }
 }
@@ -39,7 +42,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   useEffect(() => {
     if (scriptLoaded.current) return;
     const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.src = 'https://js.paystack.co/v2/inline.js';
     script.async = true;
     script.onload = () => { scriptLoaded.current = true; };
     document.body.appendChild(script);
@@ -99,12 +102,42 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
-    const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
+    const handlePaymentSuccess = async (response: { reference?: string }) => {
+      const reference = response.reference || result.reference;
+      const verification = await verifyPayment(reference);
+      if (verification?.status === 'success') {
+        setSuccessRef(reference);
+        setStep('success');
+        onPaymentSuccess(reference);
+        onSaveBuyerDetails?.(email.trim(), address.trim(), phone.trim(), name.trim());
+      } else {
+        setStep('failed');
+      }
+    };
+
+    const popup = new window.PaystackPop();
+    if (result.accessCode) {
+      popup.resumeTransaction(result.accessCode, {
+        onSuccess: handlePaymentSuccess,
+        onCancel: () => { setStep('form'); },
+        onError: () => { setStep('failed'); },
+      });
+      return;
+    }
+
+    const publicKey = result.publicKey || PAYSTACK_PUBLIC_KEY;
+    if (!publicKey) {
+      setErrorMsg('Paystack public key is not configured.');
+      setStep('form');
+      return;
+    }
+
+    popup.newTransaction({
+      key: publicKey,
       email: email.trim(),
       amount: result.amount * 100, // Paystack uses kobo
       currency: 'NGN',
-      ref: result.reference,
+      reference: result.reference,
       metadata: {
         custom_fields: [
           { display_name: 'Product', variable_name: 'product', value: product.title },
@@ -112,21 +145,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           { display_name: 'Address', variable_name: 'address', value: address.trim() },
         ],
       },
-      onClose: () => { setStep('form'); },
-      callback: async (response: { reference: string }) => {
-        const verification = await verifyPayment(response.reference);
-        if (verification?.status === 'success') {
-          setSuccessRef(response.reference);
-          setStep('success');
-          onPaymentSuccess(response.reference);
-          onSaveBuyerDetails?.(email.trim(), address.trim(), phone.trim(), name.trim());
-        } else {
-          setStep('failed');
-        }
-      },
+      onCancel: () => { setStep('form'); },
+      onSuccess: handlePaymentSuccess,
+      onError: () => { setStep('failed'); },
     });
-
-    handler.openIframe();
   };
 
   return (

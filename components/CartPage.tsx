@@ -8,7 +8,10 @@ const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ?? '';
 declare global {
   interface Window {
     PaystackPop?: {
-      setup: (config: object) => { openIframe: () => void };
+      new (): {
+        resumeTransaction: (accessCode: string, callbacks?: object) => void;
+        newTransaction: (config: object) => void;
+      };
     };
   }
 }
@@ -215,11 +218,11 @@ export const CartPage: React.FC<CartPageProps> = ({
     });
   }, [cartItems, users]);
 
-  // Load Korapay script once
+  // Load Paystack script once
   useEffect(() => {
   if (document.querySelector('script[src*="paystack"]')) return;
   const s = document.createElement('script');
-  s.src = 'https://js.paystack.co/v1/inline.js';
+  s.src = 'https://js.paystack.co/v2/inline.js';
   s.async = true;
   document.body.appendChild(s);
 }, []);
@@ -295,12 +298,34 @@ while (!window.PaystackPop && attempts < 20) {
 }
 if (!window.PaystackPop) { onFail(); return; }
 
-const handler = window.PaystackPop.setup({
-  key: PAYSTACK_PUBLIC_KEY,
+const handlePaymentSuccess = async (response: { reference?: string }) => {
+  const v = await verifyPayment(response.reference || result.reference);
+  if (v?.status === 'success') {
+    onDone(v.deliveryOtp ?? null);
+  } else {
+    onFail();
+  }
+};
+
+const popup = new window.PaystackPop();
+if (result.accessCode) {
+  popup.resumeTransaction(result.accessCode, {
+    onSuccess: handlePaymentSuccess,
+    onCancel: () => { onFail(); },
+    onError: () => { onFail(); },
+  });
+  return;
+}
+
+const publicKey = result.publicKey || PAYSTACK_PUBLIC_KEY;
+if (!publicKey) { onFail(); return; }
+
+popup.newTransaction({
+  key: publicKey,
   email: details.email,
   amount: result.amount * 100, // kobo
   currency: 'NGN',
-  ref: result.reference,
+  reference: result.reference,
   metadata: {
     custom_fields: [
       { display_name: 'Buyer', variable_name: 'buyer', value: details.name },
@@ -308,18 +333,10 @@ const handler = window.PaystackPop.setup({
       { display_name: 'Address', variable_name: 'address', value: details.address },
     ],
   },
-  onClose: () => { onFail(); },
-  callback: async (response: { reference: string }) => {
-    const v = await verifyPayment(response.reference);
-    if (v?.status === 'success') {
-      onDone(v.deliveryOtp ?? null);
-    } else {
-      onFail();
-    }
-  },
+  onCancel: () => { onFail(); },
+  onSuccess: handlePaymentSuccess,
+  onError: () => { onFail(); },
 });
-
-handler.openIframe();
      };
 
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
@@ -457,7 +474,7 @@ handler.openIframe();
                       ? `Opening payment ${currentGroupIdx + 1} of ${pendingGroups.length}…`
                       : 'Opening payment window…'}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">Complete your payment in the KoraPay window</p>
+                  <p className="text-sm text-gray-400 mt-1">Complete your payment in the Paystack window</p>
                 </div>
               </div>
             )}
@@ -707,7 +724,7 @@ handler.openIframe();
                 )}
                 {sellerGroups.length === 1 && (
                   <p className="text-xs text-gray-400 text-center mt-2">
-                    Secured by KoraPay · Cards, Bank Transfer & More
+                    Secured by Paystack · Cards, Bank Transfer & More
                   </p>
                 )}
               </div>

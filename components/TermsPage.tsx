@@ -57,7 +57,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onClose }) => {
           },
           {
             title: '5. Payments',
-            content: 'Payments are processed by KoraPay, a third-party provider\nKanoStores is a facilitator. Disputes about product quality or delivery are between buyer and seller\nRefund requests must be directed to the seller. KanoStores will assist in good faith but is not liable for seller non-performance',
+            content: 'Payments are processed by Paystack, a third-party provider\nKanoStores is a facilitator. Disputes about product quality or delivery are between buyer and seller\nRefund requests must be directed to the seller. KanoStores will assist in good faith but is not liable for seller non-performance',
           },
           {
             title: '6. Prohibited conduct',

@@ -27,6 +27,9 @@ export interface InitiateCartPaymentParams {
 export interface PaymentInitResult {
   reference: string;
   orderId: string;
+  accessCode?: string | null;
+  authorizationUrl?: string | null;
+  publicKey?: string | null;
   amount: number;
   currency: string;
   customer: { name: string; email: string };
