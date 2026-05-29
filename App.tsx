@@ -17,7 +17,7 @@ import { ShopProductsPage } from './components/ShopProductsPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Toast } from './components/Toast';
 import { Product, User, Theme, Message, MessageThread, Page } from './types';
-import { CATEGORIES, CART_CATEGORIES } from './constants';
+import { CATEGORIES, CART_CATEGORIES, SIZE_CATEGORIES } from './constants';
 import { generateAvatar } from './utils/avatar';
 import { ChatView } from './components/ChatView';
 import { MessageModal } from './components/MessageModal';
@@ -235,6 +235,8 @@ useEffect(() => {
             buyerAddress: o.buyer_address ?? null,
             createdAt: o.created_at,
             updatedAt: o.updated_at,
+            deliveryOtp: o.delivery_otp ?? null,
+            otpVerified: o.otp_verified ?? false,
           };
           setOrders(prev =>
             prev.some(x => x.id === newOrder.id) ? prev : [newOrder, ...prev]
@@ -936,7 +938,7 @@ case 'cart':
         {boostedUsers.map(seller => {
           // Pick a random category for this seller (stable per session)
 const sellerAllProducts = products.filter(p => p.sellerId === seller.id);
-const sellerCategories = [...new Set(sellerAllProducts.map(p => p.category))];
+const sellerCategories: string[] = Array.from(new Set<string>(sellerAllProducts.map(p => p.category)));
 
 if (!sessionCategoryPick.has(seller.id) || !sellerCategories.includes(sessionCategoryPick.get(seller.id)!)) {
   const randomCat = sellerCategories[Math.floor(Math.random() * sellerCategories.length)];

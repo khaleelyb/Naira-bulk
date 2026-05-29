@@ -643,7 +643,7 @@ popup.newTransaction({
                       <span className="text-xs font-bold text-green-500">₦{group.total.toLocaleString()}</span>
                     </div>
                     <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {group.items.map(({ product, quantity }) => (
+                      {group.items.map(({ product, quantity, selectedSize }) => (
                         <div key={product.id} className="p-4">
                           <div className="flex items-center gap-3">
                             <button onClick={() => onSelectProduct(product)} className="flex-shrink-0">
@@ -657,8 +657,8 @@ popup.newTransaction({
                             <div className="flex-1 min-w-0">
                               <button onClick={() => onSelectProduct(product)} className="text-left">
   <p className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.title}</p>
-  {item.selectedSize && (
-    <span className="text-xs text-gray-400">Size: {item.selectedSize}</span>
+  {selectedSize && (
+    <span className="text-xs text-gray-400">Size: {selectedSize}</span>
   )}
 </button>
                               <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
