@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 
 interface ProductCardProps {
@@ -10,6 +10,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onMessageSeller, isSaved, onToggleSave, onSelectProduct }) => {
+  const [loaded, setLoaded] = useState(false);
   const thumbnail = (product.images && product.images.length > 0) ? product.images[0] : '';
 
   return (
@@ -17,13 +18,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onMessageSell
       {/* Image */}
       <button onClick={() => onSelectProduct(product)} className="relative overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-[4/3] block">
         {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={product.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          <>
+            <div className={`w-full h-full transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}>
+              <img
+                src={thumbnail}
+                alt={product.title}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setLoaded(true)}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            {!loaded && (
+              <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
