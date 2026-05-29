@@ -130,14 +130,18 @@ const App: React.FC = () => {
     } else { document.documentElement.classList.remove('dark'); }
   }, [theme]);
 
-  useEffect(() => {
+useEffect(() => {
   if (selectedProduct) {
     window.scrollTo(0, 0);
   } else if (scrollPosition.current > 0) {
-    window.scrollTo(0, scrollPosition.current);
+    const pos = scrollPosition.current;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, pos);
+    });
   }
 }, [selectedProduct]);
-// Realtime: new products
+
+  // Realtime: new products
 useEffect(() => {
   const channel = supabase
     .channel('products-realtime')
