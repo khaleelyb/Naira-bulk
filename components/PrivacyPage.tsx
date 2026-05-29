@@ -45,7 +45,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onClose }) => {
           },
           {
             title: '2. Information we collect',
-            content: 'Account info: name, username, profile photo, phone number, bio\nTransaction info: email, delivery address, phone number (entered during checkout)\nListings you post: title, description, price, category, product photos\nMessages exchanged between buyers and sellers\nPayment references processed via KoraPay (we do not store card numbers)\nDevice and usage data collected automatically (browser type, pages visited)',
+            content: 'Account info: name, username, profile photo, phone number, bio\nTransaction info: email, delivery address, phone number (entered during checkout)\nListings you post: title, description, price, category, product photos\nMessages exchanged between buyers and sellers\nPayment references processed via Paystack (we do not store card numbers)\nDevice and usage data collected automatically (browser type, pages visited)',
           },
           {
             title: '3. How we use your information',
@@ -53,7 +53,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onClose }) => {
           },
           {
             title: '4. Data sharing',
-            content: 'KoraPay: payment processing (buyer email, name, phone, amount)\nSupabase: database and file storage provider (data stored in their infrastructure)\nWe do not sell your personal data to third parties\nWe do not display ads or share data with advertisers',
+            content: 'Paystack: payment processing (buyer email, name, phone, amount)\nSupabase: database and file storage provider (data stored in their infrastructure)\nWe do not sell your personal data to third parties\nWe do not display ads or share data with advertisers',
           },
           {
             title: '5. Your rights',

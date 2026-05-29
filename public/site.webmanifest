@@ -1,0 +1,10 @@
+{
+  "name": "NairaBulk",
+  "short_name": "NairaBulk",
+  "description": "Nigeria's bulk marketplace for buying and selling nationwide.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#16a34a"
+}

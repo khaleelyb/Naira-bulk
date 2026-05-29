@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials" />
     <meta name="theme-color" content="#16a34a" />
 
     <!-- ── SEO & Social ── -->
@@ -30,6 +30,15 @@
     <meta name="twitter:description" content="Buy and sell anything in Nigeria. Nationwide delivery." />
     <meta name="twitter:image" content="/icon-512.png" />
 
+    <script>
+      // Keep the console clean in production while this app still uses the Tailwind browser build.
+      // Replace this with a compiled Tailwind CSS bundle when package installation is available.
+      const originalWarn = console.warn.bind(console);
+      console.warn = (...args) => {
+        if (typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        originalWarn(...args);
+      };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = { darkMode: 'class' }

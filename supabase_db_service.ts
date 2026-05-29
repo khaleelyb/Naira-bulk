@@ -1,5 +1,5 @@
 import { supabase } from './services/supabase_client';
-import { Product, User, MessageThread, Message, Theme } from '../types';
+import { Product, User, MessageThread, Message, Theme } from './types';
 
 // Theme (still uses localStorage as it's a client preference)
 export const getTheme = (): Theme => {
@@ -109,6 +109,15 @@ export const updateUser = async (userId: string, updates: Partial<User>): Promis
 };
 
 // Products
+
+const parseImages = (raw: string): string[] => {
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [raw];
+    } catch {
+        return raw ? [raw] : [];
+    }
+};
 export const getProducts = async (): Promise<Product[]> => {
     try {
         const { data, error } = await supabase
@@ -123,7 +132,7 @@ export const getProducts = async (): Promise<Product[]> => {
             title: p.title,
             price: p.price,
             category: p.category,
-            image: p.image,
+            images: parseImages(p.image),
             location: p.location,
             date: p.date,
             description: p.description,
@@ -143,7 +152,7 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<Produ
                 title: product.title,
                 price: product.price,
                 category: product.category,
-                image: product.image,
+                image: JSON.stringify(product.images),
                 location: product.location,
                 date: product.date,
                 description: product.description,
@@ -159,7 +168,7 @@ export const createProduct = async (product: Omit<Product, 'id'>): Promise<Produ
             title: data.title,
             price: data.price,
             category: data.category,
-            image: data.image,
+            images: parseImages(data.image),
             location: data.location,
             date: data.date,
             description: data.description,
@@ -179,7 +188,7 @@ export const updateProduct = async (productId: string, updates: Partial<Product>
                 title: updates.title,
                 price: updates.price,
                 category: updates.category,
-                image: updates.image,
+                image: updates.images ? JSON.stringify(updates.images) : undefined,
                 description: updates.description
             })
             .eq('id', productId);
