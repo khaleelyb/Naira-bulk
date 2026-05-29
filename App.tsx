@@ -59,7 +59,6 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>(db.getTheme);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const scrollPosition = useRef(0);
-  const gridDisplayCount = useRef(8);
 
   // Modals
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
@@ -490,11 +489,10 @@ const handleChangePassword = async (currentPassword: string, newPassword: string
   };
 
   const handleSelectProduct = (product: Product) => {
-  scrollPosition.current = window.scrollY;
-  // gridDisplayCount is already tracked via onDisplayCountChange
-  window.history.pushState({ view: 'product', productId: product.id, page: activePage }, '', `#product=${product.id}`);
-  setSelectedProduct(product);
-};
+    scrollPosition.current = window.scrollY;
+    window.history.pushState({ view: 'product', productId: product.id, page: activePage }, '', `#product=${product.id}`);
+    setSelectedProduct(product);
+  };
 
   const handleMessageSeller = (product: Product) => {
     if (!currentUser) { setAuthModal({ isOpen: true, view: 'login' }); return; }
@@ -569,13 +567,7 @@ const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
     setSelectedProduct(null); setActiveThreadId(null); setSelectedCategory(null); setSelectedShop(null); setActivePage(page);
   };
 
-  const handleBack = () => {
-  const savedPos = scrollPosition.current;
-  window.history.back();
-  setTimeout(() => {
-    window.scrollTo(0, savedPos);
-  }, 150); // increased from 80 to 150
-};
+  const handleBack = () => window.history.back();
 
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
@@ -864,18 +856,16 @@ case 'cart':
                     <span className="text-xs font-normal text-gray-400">({filteredProducts.length})</span>
                   </h3>
                   <ProductGrid
-  products={[...filteredProducts].sort((a, b) => {
-    const aB = isActiveBoosted(users.find(u => u.id === a.sellerId) as any) ? 1 : 0;
-    const bB = isActiveBoosted(users.find(u => u.id === b.sellerId) as any) ? 1 : 0;
-    return bB - aB;
-  })}
-  onMessageSeller={handleMessageSeller}
-  savedProductIds={savedProductIds}
-  onToggleSave={handleToggleSave}
-  onSelectProduct={handleSelectProduct}
-  savedDisplayCount={gridDisplayCount.current}
-  onDisplayCountChange={(count) => { gridDisplayCount.current = count; }}
-/>
+                    products={[...filteredProducts].sort((a, b) => {
+                      const aB = isActiveBoosted(users.find(u => u.id === a.sellerId) as any) ? 1 : 0;
+                      const bB = isActiveBoosted(users.find(u => u.id === b.sellerId) as any) ? 1 : 0;
+                      return bB - aB;
+                    })}
+                    onMessageSeller={handleMessageSeller}
+                    savedProductIds={savedProductIds}
+                    onToggleSave={handleToggleSave}
+                    onSelectProduct={handleSelectProduct}
+                  />
                 </>
               )}
 
