@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { CategoryFilter } from './components/CategoryFilter';
 import { ProductGrid } from './components/ProductGrid';
-import { Footer } from './components/Footer';
+import { Footer } from './components/Footer';ma
 import { AddProductModal } from './components/AddProductModal';
 import { BottomNav } from './components/BottomNav';
 import { SavedPage } from './components/SavedPage';
@@ -130,16 +130,13 @@ const App: React.FC = () => {
     } else { document.documentElement.classList.remove('dark'); }
   }, [theme]);
 
-useEffect(() => {
+uuseEffect(() => {
   if (selectedProduct) {
     window.scrollTo(0, 0);
-  } else if (scrollPosition.current > 0) {
-    const pos = scrollPosition.current;
-    requestAnimationFrame(() => {
-      window.scrollTo(0, pos);
-    });
   }
 }, [selectedProduct]);
+
+// Save position on product click - already correct in handleSelectProduct
 
   // Realtime: new products
 useEffect(() => {
@@ -567,7 +564,14 @@ const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
     setSelectedProduct(null); setActiveThreadId(null); setSelectedCategory(null); setSelectedShop(null); setActivePage(page);
   };
 
-  const handleBack = () => window.history.back();
+  const handleBack = () => {
+  const savedPos = scrollPosition.current;
+  window.history.back();
+  // Restore after back navigation completes
+  setTimeout(() => {
+    window.scrollTo(0, savedPos);
+  }, 50);
+};
 
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
@@ -1050,8 +1054,12 @@ const sellerProducts = sellerAllProducts.filter(p => p.category === pickedCatego
         />
       )}
       <main className={`flex-grow ${!isAdmin ? 'pb-16 md:pb-0' : ''}`}>
-        {renderPage()}
-      </main>
+  <div style={{ display: selectedProduct || activePage !== 'home' || activeThreadId ? 'none' : 'block' }}>
+    <CategoryFilter categories={CATEGORIES} selectedCategory={null} setSelectedCategory={handleSelectCategory} />
+    {/* boosted stores and home content stays mounted */}
+  </div>
+  {renderPage()}
+</main>
       {!isAdmin && <Footer />}
       {!isAdmin && (
         <BottomNav onPostAdClick={handlePostAdClick} activePage={activePage} setActivePage={handlePageChange} cartCount={cartCount} />
