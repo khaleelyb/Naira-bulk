@@ -1,10 +1,29 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 
 // Number of products to load per batch
 const BATCH_SIZE = 8;
+const DISPLAY_COUNT_STORAGE_PREFIX = 'nairabulk-product-grid-display-count:';
+
+const getProductListStorageKey = (products: Product[]) => {
+  const productSignature = products.map(product => product.id).join('|');
+  return `${DISPLAY_COUNT_STORAGE_PREFIX}${productSignature}`;
+};
+
+const getStoredDisplayCount = (storageKey: string, productCount: number) => {
+  if (typeof window === 'undefined') return BATCH_SIZE;
+
+  const storedValue = window.sessionStorage.getItem(storageKey);
+  const parsedValue = storedValue ? Number(storedValue) : BATCH_SIZE;
+
+  if (!Number.isFinite(parsedValue) || parsedValue < BATCH_SIZE) {
+    return Math.min(BATCH_SIZE, Math.max(productCount, BATCH_SIZE));
+  }
+
+  return Math.min(Math.max(parsedValue, BATCH_SIZE), Math.max(productCount, BATCH_SIZE));
+};
 
 interface ProductGridProps {
   products: Product[];
@@ -21,20 +40,23 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   products, onMessageSeller, savedProductIds, onToggleSave, onSelectProduct, children,
   savedDisplayCount, onDisplayCountChange,
 }) => {
-  const [displayCount, setDisplayCount] = useState(savedDisplayCount ?? BATCH_SIZE);
+  const storageKey = useMemo(() => getProductListStorageKey(products), [products]);
+  const [displayCount, setDisplayCount] = useState(() => savedDisplayCount ?? getStoredDisplayCount(storageKey, products.length));
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Only reset if it's a genuinely different product list (e.g. new search)
-    // Don't reset if we have a savedDisplayCount to restore
-    if (!savedDisplayCount) {
-      setDisplayCount(BATCH_SIZE);
-    }
-  }, [products.length]);
+    const restoredCount = savedDisplayCount ?? getStoredDisplayCount(storageKey, products.length);
+    setDisplayCount(restoredCount);
+    onDisplayCountChange?.(restoredCount);
+  }, [savedDisplayCount, storageKey, products.length, onDisplayCountChange]);
 
   const updateDisplayCount = (count: number) => {
-    setDisplayCount(count);
-    onDisplayCountChange?.(count);
+    const nextCount = Math.min(Math.max(count, BATCH_SIZE), Math.max(products.length, BATCH_SIZE));
+    setDisplayCount(nextCount);
+    onDisplayCountChange?.(nextCount);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(storageKey, String(nextCount));
+    }
   };
 
   const displayedProducts = products.slice(0, displayCount);
