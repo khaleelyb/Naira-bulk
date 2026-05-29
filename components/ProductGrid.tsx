@@ -13,16 +13,29 @@ interface ProductGridProps {
   onToggleSave: (productId: string) => void;
   onSelectProduct: (product: Product) => void;
   children?: (props: { product: Product }) => React.ReactNode;
+  savedDisplayCount?: number;
+  onDisplayCountChange?: (count: number) => void;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ products, onMessageSeller, savedProductIds, onToggleSave, onSelectProduct, children }) => {
-  const [displayCount, setDisplayCount] = useState(BATCH_SIZE);
+export const ProductGrid: React.FC<ProductGridProps> = ({ 
+  products, onMessageSeller, savedProductIds, onToggleSave, onSelectProduct, children,
+  savedDisplayCount, onDisplayCountChange,
+}) => {
+  const [displayCount, setDisplayCount] = useState(savedDisplayCount ?? BATCH_SIZE);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  // Reset the view when the product list is filtered or changed
   useEffect(() => {
-    setDisplayCount(BATCH_SIZE);
-  }, [products]);
+    // Only reset if it's a genuinely different product list (e.g. new search)
+    // Don't reset if we have a savedDisplayCount to restore
+    if (!savedDisplayCount) {
+      setDisplayCount(BATCH_SIZE);
+    }
+  }, [products.length]);
+
+  const updateDisplayCount = (count: number) => {
+    setDisplayCount(count);
+    onDisplayCountChange?.(count);
+  };
 
   const displayedProducts = products.slice(0, displayCount);
   const hasMore = displayCount < products.length;
@@ -30,28 +43,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products, onMessageSel
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const firstEntry = entries[0];
-        if (firstEntry.isIntersecting && hasMore) {
-          // Load next batch of products
-          setDisplayCount(prevCount => prevCount + BATCH_SIZE);
+        if (entries[0].isIntersecting && hasMore) {
+          updateDisplayCount(displayCount + BATCH_SIZE);
         }
       },
-      // Options: start loading when the loader is 200px away from the viewport
-      { rootMargin: '200px' }
+      { rootMargin: '400px' }
     );
-
     const currentLoader = loaderRef.current;
-    if (currentLoader) {
-      observer.observe(currentLoader);
-    }
-
-    // Cleanup observer on component unmount
-    return () => {
-      if (currentLoader) {
-        observer.unobserve(currentLoader);
-      }
-    };
-  }, [hasMore]); // Re-create the observer if `hasMore` changes
+    if (currentLoader) observer.observe(currentLoader);
+    return () => { if (currentLoader) observer.unobserve(currentLoader); };
+  }, [hasMore, displayCount]);
+  // ... rest of render stays the same
 
   return (
     <section className="pb-12">
