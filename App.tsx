@@ -130,14 +130,16 @@ const App: React.FC = () => {
     } else { document.documentElement.classList.remove('dark'); }
   }, [theme]);
 
+// AFTER (fixed)
 useEffect(() => {
   if (selectedProduct) {
     window.scrollTo(0, 0);
   } else if (scrollPosition.current > 0) {
     const pos = scrollPosition.current;
-    requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
       window.scrollTo(0, pos);
-    });
+    }, 50);
+    return () => clearTimeout(timer);
   }
 }, [selectedProduct]);
 
