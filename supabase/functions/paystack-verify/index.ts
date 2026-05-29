@@ -1,69 +1,82 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const PAYSTACK_API_BASE = 'https://api.paystack.co';
+const PAYSTACK_SECRET_KEY = Deno.env.get("PAYSTACK_SECRET_KEY") ?? "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const PAYSTACK_API_BASE = "https://api.paystack.co";
 
-const requiredEnv = (name: string) => {
-  const value = Deno.env.get(name);
-  if (!value) throw new Error(`Missing ${name}`);
-  return value;
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, 405);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   try {
-    const { reference } = await req.json() as { reference?: string };
-    if (!reference || typeof reference !== 'string') {
-      return jsonResponse({ error: 'Missing payment reference' }, 400);
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing Supabase environment variables");
+    }
+    if (!PAYSTACK_SECRET_KEY) {
+      throw new Error("Missing PAYSTACK_SECRET_KEY");
     }
 
-    const supabaseUrl = requiredEnv('SUPABASE_URL');
-    const serviceRoleKey = requiredEnv('SUPABASE_SERVICE_ROLE_KEY');
-    const paystackSecretKey = requiredEnv('PAYSTACK_SECRET_KEY');
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const { reference } = await req.json() as { reference?: string };
+    if (!reference || typeof reference !== "string") {
+      return jsonResponse({ error: "Missing payment reference" }, 400);
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .select('id, amount, status')
-      .eq('korapay_reference', reference)
+      .from("orders")
+      .select("id, amount, status")
+      .eq("korapay_reference", reference)
       .single();
 
     if (orderError || !order) {
-      console.error('paystack-verify order lookup error:', orderError);
-      return jsonResponse({ error: 'Order not found' }, 404);
+      console.error("Order lookup error:", orderError);
+      return jsonResponse({ error: "Order not found" }, 404);
     }
 
     const verifyResponse = await fetch(`${PAYSTACK_API_BASE}/transaction/verify/${encodeURIComponent(reference)}`, {
-      headers: { Authorization: `Bearer ${paystackSecretKey}` },
+      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
     const verified = await verifyResponse.json();
 
     if (!verifyResponse.ok || !verified.status) {
-      console.error('paystack-verify API error:', verified);
-      await supabase.from('orders').update({ status: 'failed' }).eq('id', order.id);
-      return jsonResponse({ status: 'failed', orderId: order.id, message: verified.message ?? 'Verification failed' }, 502);
+      console.error("Paystack verify error:", verified);
+      await supabase.from("orders").update({ status: "failed" }).eq("id", order.id);
+      return jsonResponse({ status: "failed", orderId: order.id, message: verified.message ?? "Verification failed" }, 502);
     }
 
     const transaction = verified.data;
     const expectedAmount = Math.round(Number(order.amount) * 100);
-    const paidSuccessfully = transaction?.status === 'success' && transaction?.currency === 'NGN' && transaction?.amount === expectedAmount;
-    const nextStatus = paidSuccessfully ? 'success' : 'failed';
+    const paidSuccessfully = transaction?.status === "success" && transaction?.currency === "NGN" && transaction?.amount === expectedAmount;
+    const nextStatus = paidSuccessfully ? "success" : "failed";
 
     const { error: updateError } = await supabase
-      .from('orders')
+      .from("orders")
       .update({ status: nextStatus })
-      .eq('id', order.id);
+      .eq("id", order.id);
 
     if (updateError) {
-      console.error('paystack-verify order update error:', updateError);
-      return jsonResponse({ error: 'Could not update order after verification' }, 500);
+      console.error("Order update error:", updateError);
+      return jsonResponse({ error: "Could not update order after verification" }, 500);
     }
 
     return jsonResponse({
@@ -72,7 +85,10 @@ Deno.serve(async (req) => {
       orderId: order.id,
     });
   } catch (err) {
-    console.error('paystack-verify unexpected error:', err);
-    return jsonResponse({ error: 'Unexpected payment verification error' }, 500);
+    console.error("Unexpected error:", err);
+    return jsonResponse({
+      error: "Internal server error",
+      detail: String(err),
+    }, 500);
   }
 });
