@@ -103,20 +103,25 @@ const App: React.FC = () => {
 }, []);
 
   // --- HISTORY ---
-  useEffect(() => {
-    const handlePop = (e: PopStateEvent) => {
-      const s = e.state;
-      if (!s) { setSelectedProduct(null); setActiveThreadId(null); setSelectedCategory(null); setSelectedShop(null); setActivePage('home'); return; }
-      if (s.page) setActivePage(s.page);
-      setSelectedProduct(s.view === 'product' && s.productId ? products.find(p => p.id === s.productId) ?? null : null);
-      setActiveThreadId(s.view === 'thread' ? s.threadId ?? null : null);
-      if (s.view === 'shop' && s.sellerId) { setSelectedShop(users.find(u => u.id === s.sellerId) ?? null); setSelectedCategory(s.category ?? null); }
-      else if (s.view === 'category') { setSelectedCategory(s.category ?? null); setSelectedShop(null); }
-      else if (!s.view || s.view === 'home') { setSelectedCategory(null); setSelectedShop(null); }
-    };
-    window.addEventListener('popstate', handlePop);
-    return () => window.removeEventListener('popstate', handlePop);
-  }, [products, users, threads]);
+  const handlePop = (e: PopStateEvent) => {
+  const s = e.state;
+  const savedPos = scrollPosition.current;
+  if (!s) { 
+    setSelectedProduct(null); setActiveThreadId(null); 
+    setSelectedCategory(null); setSelectedShop(null); setActivePage('home');
+    setTimeout(() => window.scrollTo(0, savedPos), 80);
+    return; 
+  }
+  if (s.page) setActivePage(s.page);
+  setSelectedProduct(s.view === 'product' && s.productId ? products.find(p => p.id === s.productId) ?? null : null);
+  setActiveThreadId(s.view === 'thread' ? s.threadId ?? null : null);
+  if (s.view === 'shop' && s.sellerId) { setSelectedShop(users.find(u => u.id === s.sellerId) ?? null); setSelectedCategory(s.category ?? null); }
+  else if (s.view === 'category') { setSelectedCategory(s.category ?? null); setSelectedShop(null); }
+  else if (!s.view || s.view === 'home') { 
+    setSelectedCategory(null); setSelectedShop(null);
+    setTimeout(() => window.scrollTo(0, savedPos), 80);
+  }
+};
 
   useEffect(() => {
     if (currentUser) { db.saveCurrentUser(currentUser); db.getSavedProductIds(currentUser.id).then(setSavedProductIds); }
@@ -567,7 +572,13 @@ const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
     setSelectedProduct(null); setActiveThreadId(null); setSelectedCategory(null); setSelectedShop(null); setActivePage(page);
   };
 
-  const handleBack = () => window.history.back();
+ const handleBack = () => {
+  const savedPos = scrollPosition.current;
+  window.history.back();
+  setTimeout(() => {
+    window.scrollTo(0, savedPos);
+  }, 80);
+};
 
   const handleSearchChange = (q: string) => {
     setSearchQuery(q);
