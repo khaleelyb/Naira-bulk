@@ -23,8 +23,6 @@ interface Order {
   buyerAddress: string | null;
   createdAt: string;
   productId: string | null;
-  deliveryOtp: string | null;
-  otpVerified: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -49,59 +47,6 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
 const formatDate = (iso: string) => {
   try { return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return iso; }
-};
-
-// ── Delivery OTP display card ─────────────────────────────────────────────────
-const DeliveryOtpCard: React.FC<{ otp: string; isDelivered?: boolean }> = ({ otp, isDelivered }) => {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(otp).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-  if (isDelivered) {
-    return (
-      <div className="mt-3 flex items-center gap-2 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800/40 rounded-xl px-3 py-2">
-        <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">Delivery confirmed ✓</span>
-      </div>
-    );
-  }
-  return (
-    <div className="mt-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-        </svg>
-        <p className="text-xs font-bold text-amber-700 dark:text-amber-400">Your Delivery Code</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="flex gap-1.5 flex-1">
-          {otp.split('').map((digit, i) => (
-            <div key={i} className="flex-1 h-10 bg-white dark:bg-gray-900 border-2 border-amber-300 dark:border-amber-700 rounded-xl flex items-center justify-center">
-              <span className="text-lg font-bold text-amber-700 dark:text-amber-400 tracking-widest">{digit}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={copy}
-          className="flex-shrink-0 flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 px-2.5 py-1.5 rounded-lg transition-colors"
-        >
-          {copied
-            ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-            : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg>
-          }
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <p className="text-[11px] text-amber-600 dark:text-amber-500 mt-2 leading-relaxed">
-        Share this code with the seller when they deliver your order. They'll use it to confirm delivery.
-      </p>
-    </div>
-  );
 };
 
 interface CartPageProps {
@@ -185,8 +130,6 @@ export const CartPage: React.FC<CartPageProps> = ({
   const [currentGroupIdx, setCurrentGroupIdx]   = useState(0);
   const [completedCount, setCompletedCount]     = useState(0);
   const [buyerDetails, setBuyerDetails]         = useState<{ name: string; email: string; phone: string; address: string } | null>(null);
-  // OTP per seller group — index matches pendingGroups
-  const [groupOtps, setGroupOtps]               = useState<string[]>([]);
 
   const total = cartItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
@@ -215,14 +158,14 @@ export const CartPage: React.FC<CartPageProps> = ({
     });
   }, [cartItems, users]);
 
-  // Load Korapay script once
+  // Load Paystack script once
   useEffect(() => {
-  if (document.querySelector('script[src*="paystack"]')) return;
-  const s = document.createElement('script');
-  s.src = 'https://js.paystack.co/v1/inline.js';
-  s.async = true;
-  document.body.appendChild(s);
-}, []);
+    if (document.querySelector('script[src*="paystack"]')) return;
+    const s = document.createElement('script');
+    s.src = 'https://js.paystack.co/v1/inline.js';
+    s.async = true;
+    document.body.appendChild(s);
+  }, []);
 
   const loadOrders = () => {
     if (!currentUser) return;
@@ -236,8 +179,6 @@ export const CartPage: React.FC<CartPageProps> = ({
             currency: o.currency ?? 'NGN', status: o.status,
             buyerName: o.buyer_name ?? null, buyerAddress: o.buyer_address ?? null,
             createdAt: o.created_at, productId: o.product_id ?? null,
-            deliveryOtp: o.delivery_otp ?? null,
-            otpVerified: o.otp_verified ?? false,
           })));
         }
         setOrdersLoading(false);
@@ -255,7 +196,6 @@ export const CartPage: React.FC<CartPageProps> = ({
     setCurrentGroupIdx(0);
     setCompletedCount(0);
     setBuyerDetails(null);
-    setGroupOtps([]);
     setCheckoutStep('form');
   };
 
@@ -263,7 +203,7 @@ export const CartPage: React.FC<CartPageProps> = ({
   const processGroup = async (
     group: SellerGroup,
     details: { name: string; email: string; phone: string; address: string },
-    onDone: (otp: string | null) => void,
+    onDone: () => void,
     onFail: () => void,
   ) => {
     if (!currentUser) return;
@@ -271,13 +211,13 @@ export const CartPage: React.FC<CartPageProps> = ({
     const result = await initiateCartPayment({
       sellerId: group.sellerId,
       items: group.items.map(i => ({
-  productId: i.product.id,
-  productTitle: i.selectedSize
-    ? `${i.product.title} (Size ${i.selectedSize})`
-    : i.product.title,
-  quantity: i.quantity,
-  unitPrice: i.product.price,
-})),
+        productId: i.product.id,
+        productTitle: i.selectedSize
+          ? `${i.product.title} (Size ${i.selectedSize})`
+          : i.product.title,
+        quantity: i.quantity,
+        unitPrice: i.product.price,
+      })),
       totalAmount: group.total,
       buyerId: currentUser.id,
       buyerName: details.name,
@@ -289,52 +229,50 @@ export const CartPage: React.FC<CartPageProps> = ({
     if (!result) { onFail(); return; }
 
     let attempts = 0;
-while (!window.PaystackPop && attempts < 20) {
-  await new Promise(r => setTimeout(r, 150));
-  attempts++;
-}
-if (!window.PaystackPop) { onFail(); return; }
-
-const handler = window.PaystackPop.setup({
-  key: PAYSTACK_PUBLIC_KEY,
-  email: details.email,
-  amount: result.amount * 100, // kobo
-  currency: 'NGN',
-  ref: result.reference,
-  metadata: {
-    custom_fields: [
-      { display_name: 'Buyer', variable_name: 'buyer', value: details.name },
-      { display_name: 'Phone', variable_name: 'phone', value: details.phone },
-      { display_name: 'Address', variable_name: 'address', value: details.address },
-    ],
-  },
-  onClose: () => { onFail(); },
-  callback: async (response: { reference: string }) => {
-    const v = await verifyPayment(response.reference);
-    if (v?.status === 'success') {
-      onDone(v.deliveryOtp ?? null);
-    } else {
-      onFail();
+    while (!window.PaystackPop && attempts < 20) {
+      await new Promise(r => setTimeout(r, 150));
+      attempts++;
     }
-  },
-});
+    if (!window.PaystackPop) { onFail(); return; }
 
-handler.openIframe();
-     };
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: details.email,
+      amount: result.amount * 100,
+      currency: 'NGN',
+      ref: result.reference,
+      metadata: {
+        custom_fields: [
+          { display_name: 'Buyer', variable_name: 'buyer', value: details.name },
+          { display_name: 'Phone', variable_name: 'phone', value: details.phone },
+          { display_name: 'Address', variable_name: 'address', value: details.address },
+        ],
+      },
+      onClose: () => { onFail(); },
+      callback: async (response: { reference: string }) => {
+        const v = await verifyPayment(response.reference);
+        if (v?.status === 'success') {
+          onDone();
+        } else {
+          onFail();
+        }
+      },
+    });
+
+    handler.openIframe();
+  };
 
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
     setBuyerDetails(details);
     setCheckoutStep('processing');
-    await runNextGroup(0, details, []);
+    await runNextGroup(0, details);
   };
 
   const runNextGroup = async (
     idx: number,
     details: { name: string; email: string; phone: string; address: string },
-    collectedOtps: string[],
   ) => {
     if (idx >= pendingGroups.length) {
-      setGroupOtps(collectedOtps);
       setCheckoutStep('done');
       onCartCheckoutSuccess?.();
       return;
@@ -344,13 +282,11 @@ handler.openIframe();
     processGroup(
       group,
       details,
-      (otp) => {
-        const newOtps = [...collectedOtps, otp ?? ''];
+      () => {
         setCompletedCount(c => c + 1);
-        runNextGroup(idx + 1, details, newOtps);
+        runNextGroup(idx + 1, details);
       },
       () => {
-        setGroupOtps(collectedOtps);
         setCheckoutStep('error');
       },
     );
@@ -362,7 +298,6 @@ handler.openIframe();
     setCurrentGroupIdx(0);
     setCompletedCount(0);
     setBuyerDetails(null);
-    setGroupOtps([]);
   };
 
   // ── Checkout overlay ──────────────────────────────────────────────────────
@@ -457,12 +392,12 @@ handler.openIframe();
                       ? `Opening payment ${currentGroupIdx + 1} of ${pendingGroups.length}…`
                       : 'Opening payment window…'}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">Complete your payment in the KoraPay window</p>
+                  <p className="text-sm text-gray-400 mt-1">Complete your payment in the Paystack window</p>
                 </div>
               </div>
             )}
 
-            {/* Done — show OTP(s) */}
+            {/* Done */}
             {checkoutStep === 'done' && (
               <div className="flex flex-col items-center py-6 gap-4 w-full">
                 <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
@@ -476,38 +411,6 @@ handler.openIframe();
                   </p>
                   <p className="text-sm text-gray-400 mt-1">Your orders have been placed.</p>
                 </div>
-
-                {/* OTP section */}
-                {groupOtps.some(otp => otp) && (
-                  <div className="w-full space-y-3 mt-1">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Codes</p>
-                      <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-                    </div>
-                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
-                      <p className="text-xs text-amber-700 dark:text-amber-400 mb-3 leading-relaxed">
-                        🔐 <strong>Save these codes!</strong> Share each code with the respective seller when they deliver your order.
-                      </p>
-                      {pendingGroups.map((group, i) => {
-                        const otp = groupOtps[i];
-                        if (!otp) return null;
-                        return (
-                          <div key={group.sellerId} className="mb-3 last:mb-0">
-                            {pendingGroups.length > 1 && (
-                              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">{group.sellerName}</p>
-                            )}
-                            <DeliveryOtpCard otp={otp} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="text-[11px] text-gray-400 text-center">
-                      These codes are also saved in your Order History tab.
-                    </p>
-                  </div>
-                )}
-
                 <button
                   onClick={() => { resetCheckout(); setActiveTab('orders'); loadOrders(); }}
                   className="bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors"
@@ -533,18 +436,6 @@ handler.openIframe();
                       : 'Something went wrong. Please try again.'}
                   </p>
                 </div>
-                {/* Show any OTPs already collected */}
-                {groupOtps.some(otp => otp) && (
-                  <div className="w-full bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">Delivery codes for completed payments:</p>
-                    {groupOtps.map((otp, i) => otp ? (
-                      <div key={i} className="mb-2">
-                        {pendingGroups[i] && <p className="text-xs text-gray-500 mb-1">{pendingGroups[i].sellerName}</p>}
-                        <DeliveryOtpCard otp={otp} />
-                      </div>
-                    ) : null)}
-                  </div>
-                )}
                 <div className="flex gap-3">
                   <button onClick={resetCheckout}
                     className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -553,7 +444,7 @@ handler.openIframe();
                   <button onClick={() => {
                     if (buyerDetails) {
                       setCheckoutStep('processing');
-                      runNextGroup(currentGroupIdx, buyerDetails, groupOtps);
+                      runNextGroup(currentGroupIdx, buyerDetails);
                     }
                   }}
                     className="px-5 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors">
@@ -626,8 +517,8 @@ handler.openIframe();
                       <span className="text-xs font-bold text-green-500">₦{group.total.toLocaleString()}</span>
                     </div>
                     <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                      {group.items.map(({ product, quantity }) => (
-                        <div key={product.id} className="p-4">
+                      {group.items.map(({ product, quantity, selectedSize }) => (
+                        <div key={`${product.id}-${selectedSize ?? ''}`} className="p-4">
                           <div className="flex items-center gap-3">
                             <button onClick={() => onSelectProduct(product)} className="flex-shrink-0">
                               <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -639,11 +530,11 @@ handler.openIframe();
                             </button>
                             <div className="flex-1 min-w-0">
                               <button onClick={() => onSelectProduct(product)} className="text-left">
-  <p className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.title}</p>
-  {item.selectedSize && (
-    <span className="text-xs text-gray-400">Size: {item.selectedSize}</span>
-  )}
-</button>
+                                <p className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.title}</p>
+                                {selectedSize && (
+                                  <span className="text-xs text-gray-400">Size: {selectedSize}</span>
+                                )}
+                              </button>
                               <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
                                 ₦{(product.price * quantity).toLocaleString()}
                                 {quantity > 1 && <span className="text-xs font-normal text-gray-400 ml-1">(₦{product.price.toLocaleString()} each)</span>}
@@ -707,7 +598,7 @@ handler.openIframe();
                 )}
                 {sellerGroups.length === 1 && (
                   <p className="text-xs text-gray-400 text-center mt-2">
-                    Secured by KoraPay · Cards, Bank Transfer & More
+                    Secured by Paystack · Cards, Bank Transfer & More
                   </p>
                 )}
               </div>
@@ -767,16 +658,6 @@ handler.openIframe();
                       );
                     })}
                   </div>
-
-                  {/* Delivery OTP — shown when order is paid/shipped and not yet delivered */}
-                  {order.deliveryOtp && !order.otpVerified && (order.status === 'success' || order.status === 'shipped') && (
-                    <DeliveryOtpCard otp={order.deliveryOtp} />
-                  )}
-
-                  {/* Confirmed delivery badge */}
-                  {order.otpVerified && (
-                    <DeliveryOtpCard otp="" isDelivered />
-                  )}
 
                   {(order.status === 'failed' || order.status === 'pending' || order.status === 'processing') && (
                     <div className={`mt-3 px-3 py-2 rounded-xl text-xs font-medium ${
