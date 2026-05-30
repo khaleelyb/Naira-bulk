@@ -575,163 +575,167 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{filteredOrders.length} orders</span>
                 <span className="text-xs text-gray-400">Total: ₦{filteredOrders.reduce((s, o) => s + (o.status !== 'failed' ? o.amount : 0), 0).toLocaleString()}</span>
               </div>
-              <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                {filteredOrders.map(o => {
-                  const buyer = users.find(u => u.id === o.buyerId);
-                  const seller = users.find(u => u.id === o.sellerId);
-                  const product = products.find(p => p.id === o.productId);
-                  const isExpanded = expandedOrderId === o.id;
-                  const nextStatus = NEXT_STATUS[o.status];
-                  return (
-                    <div key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                      <div className="px-5 py-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0">
-  {product?.images?.[0]
-    ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
-    : <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-300 dark:text-gray-600">
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-        <span className="text-xs font-medium">No image</span>
-      </div>
-  }
-</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 flex-wrap">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-bold text-gray-900 dark:text-white text-base leading-snug flex items-center gap-1.5">
-                                  <a href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`} target="_blank" rel="noopener noreferrer" title="Search on Temu" className="flex-shrink-0 text-orange-500 hover:text-orange-600 transition-colors">🔍</a>
-                                  {o.productTitle}
-                                </p>
-     
-                                {product && (
-                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
-                                    <span className="text-xs text-gray-400">#{o.id.slice(0, 8)}</span>
-                                  </div>
-                                )}
-                                <p className="text-xs text-gray-400 mt-1">{formatDate(o.createdAt)}</p>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <StatusBadge status={o.status} />
-                                <p className="font-bold text-green-600 dark:text-green-400 text-base">₦{o.amount.toLocaleString()}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 mt-2 flex-wrap">
-                              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                <span>{o.buyerName ?? buyer?.name ?? 'Unknown buyer'}</span>
-                              </div>
-                              {o.buyerEmail && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><a href={`mailto:${o.buyerEmail}`} className="hover:text-green-500 transition-colors">{o.buyerEmail}</a></div>}
-                              {o.buyerPhone && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg><a href={`tel:${o.buyerPhone}`} className="hover:text-green-500 transition-colors">{o.buyerPhone}</a></div>}
-                              {o.buyerAddress && <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg><span>{o.buyerAddress}</span></div>}
-                            </div>
-                            <div className="flex items-center gap-2 mt-3 flex-wrap">
-                              {nextStatus && (
-                                <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)} className="text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm">{NEXT_LABEL[o.status]}</button>
-                              )}
-                              <button onClick={() => setExpandedOrderId(isExpanded ? null : o.id)} className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">{isExpanded ? 'Hide details' : 'View details'}</button>
-                            </div>
+              <div>
+  {(() => {
+    const grouped = filteredOrders.reduce((acc, o) => {
+      const dateKey = new Date(o.createdAt).toLocaleDateString('en-NG', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(o);
+      return acc;
+    }, {} as Record<string, typeof filteredOrders>);
+
+    const sortedKeys = Object.keys(grouped).sort(
+      (a, b) => new Date(grouped[b][0].createdAt).getTime() - new Date(grouped[a][0].createdAt).getTime()
+    );
+
+    return sortedKeys.map(dateKey => (
+      <div key={dateKey}>
+        <div className="sticky top-14 z-10 flex items-center gap-3 px-5 py-2.5 bg-gray-50 dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+            </svg>
+            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{dateKey}</span>
+          </div>
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          <span className="text-xs font-semibold text-gray-400">
+            {grouped[dateKey].length} order{grouped[dateKey].length !== 1 ? 's' : ''}
+            {' · '}₦{grouped[dateKey].reduce((s, o) => s + (o.status !== 'failed' ? o.amount : 0), 0).toLocaleString()}
+          </span>
+        </div>
+
+        <div className="divide-y divide-gray-50 dark:divide-gray-800">
+          {grouped[dateKey].map(o => {
+            const buyer = users.find(u => u.id === o.buyerId);
+            const seller = users.find(u => u.id === o.sellerId);
+            const product = products.find(p => p.id === o.productId);
+            const isExpanded = expandedOrderId === o.id;
+            const nextStatus = NEXT_STATUS[o.status];
+            return (
+              <div key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                <div className="px-5 py-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0">
+                      {product?.images?.[0]
+                        ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-300 dark:text-gray-600">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                            <span className="text-xs font-medium">No image</span>
                           </div>
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-gray-900 dark:text-white text-base leading-snug flex items-center gap-1.5">
+                            <a href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`} target="_blank" rel="noopener noreferrer" title="Search on Temu" className="flex-shrink-0 text-orange-500 hover:text-orange-600 transition-colors">🔍</a>
+                            {o.productTitle}
+                          </p>
+                          {product && (
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
+                              <span className="text-xs text-gray-400">#{o.id.slice(0, 8)}</span>
+                            </div>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">{formatDate(o.createdAt)}</p>
                         </div>
-                        {isExpanded && (
-                          <div className="mt-4 ml-16 bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-2 text-xs">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Order ID</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.id}</p></div>
-                              {o.buyerPhone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p><a href={`tel:${o.buyerPhone}`} className="text-green-500 hover:text-green-600 font-medium">{o.buyerPhone}</a></div>}
-                              {o.buyerAddress && <div className="sm:col-span-2"><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Delivery Address</p><p className="text-gray-600 dark:text-gray-300">{o.buyerAddress}</p></div>}
-                              {o.korapayReference && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Payment Reference</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.korapayReference}</p></div>}
-                              {seller && (
-  <div>
-    <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Seller</p>
-
-    <div className="flex items-center gap-2">
-      <img
-        src={seller.profilePicture}
-        alt={seller.name}
-        className="w-5 h-5 rounded-full object-cover"
-      />
-      <p className="text-gray-600 dark:text-gray-300">
-        {seller.name} (@{seller.username})
-      </p>
-    </div>
-
-    {seller.phone && (
-      <a
-        href={`tel:${seller.phone}`}
-        className="text-green-500 hover:text-green-600 text-xs font-medium mt-1 block"
-      >
-        📞 {seller.phone}
-      </a>
-    )}
-  </div>
-)}
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Amount</p><p className="text-gray-600 dark:text-gray-300 font-bold">₦{o.amount.toLocaleString()} {o.currency}</p></div>
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Last Updated</p><p className="text-gray-600 dark:text-gray-300">{formatDate(o.updatedAt)}</p></div>
-                            </div>
-                          
-
-
-{/* 👇 REPLACE COPY BUTTON WITH THIS */}
-<button
-  onClick={() => {
-    if (!seller?.phone) {
-      alert('Seller phone not available');
-      return;
-    }
-
-    const phone = seller.phone.replace(/^0/, '234').replace(/\D/g, '');
-
-    const text = [
-      `Hello ${seller.name},`,
-      ``,
-      `📦 New Order Details`,
-      `Product: ${o.productTitle}`,
-      o.productId ? `🆔 Product ID: ${o.productId}` : '',
-      `Amount: ₦${o.amount.toLocaleString()}`,
-      `Status: ${STATUS_LABELS[o.status]}`,
-      ``,
-      `👤 Buyer: ${o.buyerName ?? '—'}`,
-      o.buyerPhone ? `📞 Buyer Phone: ${o.buyerPhone}` : '',
-      o.buyerAddress ? `📍 Address: ${o.buyerAddress}` : '',
-      ``,
-      o.korapayReference ? `💳 Payment Ref: ${o.korapayReference}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-
-    window.open(url, '_blank');
-  }}
-  className="mt-3 w-full sm:w-auto text-xs font-bold bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors"
->
-  💬 Send to WhatsApp Seller
-</button>
-
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                              <p className="text-gray-400 font-semibold uppercase tracking-wide mb-2">Update Status Manually</p>
-                              <div className="flex flex-wrap gap-2">
-                                {(['pending','processing','success','shipped','delivered','failed'] as Order['status'][]).map(s => (
-                                  <button key={s} disabled={o.status === s} onClick={() => onUpdateOrderStatus(o.id, s)}
-                                    className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-300 hover:text-green-500'}`}>
-                                    {STATUS_LABELS[s]}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <StatusBadge status={o.status} />
+                          <p className="font-bold text-green-600 dark:text-green-400 text-base">₦{o.amount.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                          <span>{o.buyerName ?? buyer?.name ?? 'Unknown buyer'}</span>
+                        </div>
+                        {o.buyerEmail && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><a href={`mailto:${o.buyerEmail}`} className="hover:text-green-500 transition-colors">{o.buyerEmail}</a></div>}
+                        {o.buyerPhone && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg><a href={`tel:${o.buyerPhone}`} className="hover:text-green-500 transition-colors">{o.buyerPhone}</a></div>}
+                        {o.buyerAddress && <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg><span>{o.buyerAddress}</span></div>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        {nextStatus && (
+                          <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)} className="text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm">{NEXT_LABEL[o.status]}</button>
                         )}
+                        <button onClick={() => setExpandedOrderId(isExpanded ? null : o.id)} className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">{isExpanded ? 'Hide details' : 'View details'}</button>
                       </div>
                     </div>
-                  );
-                })}
-                {filteredOrders.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-200 dark:text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                    No orders found
                   </div>
-                )}
+                  {isExpanded && (
+                    <div className="mt-4 ml-16 bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-2 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Order ID</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.id}</p></div>
+                        {o.buyerPhone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p><a href={`tel:${o.buyerPhone}`} className="text-green-500 hover:text-green-600 font-medium">{o.buyerPhone}</a></div>}
+                        {o.buyerAddress && <div className="sm:col-span-2"><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Delivery Address</p><p className="text-gray-600 dark:text-gray-300">{o.buyerAddress}</p></div>}
+                        {o.korapayReference && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Payment Reference</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.korapayReference}</p></div>}
+                        {seller && (
+                          <div>
+                            <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Seller</p>
+                            <div className="flex items-center gap-2">
+                              <img src={seller.profilePicture} alt={seller.name} className="w-5 h-5 rounded-full object-cover" />
+                              <p className="text-gray-600 dark:text-gray-300">{seller.name} (@{seller.username})</p>
+                            </div>
+                            {seller.phone && (
+                              <a href={`tel:${seller.phone}`} className="text-green-500 hover:text-green-600 text-xs font-medium mt-1 block">📞 {seller.phone}</a>
+                            )}
+                          </div>
+                        )}
+                        <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Amount</p><p className="text-gray-600 dark:text-gray-300 font-bold">₦{o.amount.toLocaleString()} {o.currency}</p></div>
+                        <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Last Updated</p><p className="text-gray-600 dark:text-gray-300">{formatDate(o.updatedAt)}</p></div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!seller?.phone) { alert('Seller phone not available'); return; }
+                          const phone = seller.phone.replace(/^0/, '234').replace(/\D/g, '');
+                          const text = [
+                            `Hello ${seller.name},`, ``,
+                            `📦 New Order Details`,
+                            `Product: ${o.productTitle}`,
+                            o.productId ? `🆔 Product ID: ${o.productId}` : '',
+                            `Amount: ₦${o.amount.toLocaleString()}`,
+                            `Status: ${STATUS_LABELS[o.status]}`, ``,
+                            `👤 Buyer: ${o.buyerName ?? '—'}`,
+                            o.buyerPhone ? `📞 Buyer Phone: ${o.buyerPhone}` : '',
+                            o.buyerAddress ? `📍 Address: ${o.buyerAddress}` : '', ``,
+                            o.korapayReference ? `💳 Payment Ref: ${o.korapayReference}` : '',
+                          ].filter(Boolean).join('\n');
+                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                        }}
+                        className="mt-3 w-full sm:w-auto text-xs font-bold bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        💬 Send to WhatsApp Seller
+                      </button>
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-gray-400 font-semibold uppercase tracking-wide mb-2">Update Status Manually</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(['pending','processing','success','shipped','delivered','failed'] as Order['status'][]).map(s => (
+                            <button key={s} disabled={o.status === s} onClick={() => onUpdateOrderStatus(o.id, s)}
+                              className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-300 hover:text-green-500'}`}>
+                              {STATUS_LABELS[s]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
+    ));
+  })()}
+
+  {filteredOrders.length === 0 && (
+    <div className="text-center py-12 text-gray-400">
+      <svg className="w-12 h-12 mx-auto mb-3 text-gray-200 dark:text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+      No orders found
+    </div>
+  )}
+</div>
             </div>
           </div>
         )}
