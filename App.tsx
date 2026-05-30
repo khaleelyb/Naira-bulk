@@ -248,8 +248,6 @@ useEffect(() => {
             ...x, 
             status: o.status, 
             updatedAt: o.updated_at,
-            otpVerified: o.otp_verified ?? false,  // ADD THIS
-            deliveryOtp: o.delivery_otp ?? null,    // ADD THIS
           }
         : x
             )
