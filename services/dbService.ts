@@ -229,9 +229,6 @@ export interface Order {
   buyerAddress: string | null;
   createdAt: string;
   updatedAt: string;
-  // ── Delivery OTP ──
-  deliveryOtp: string | null;
-  otpVerified: boolean;
 }
 
 const rowToOrder = (o: any): Order => ({
@@ -250,8 +247,6 @@ const rowToOrder = (o: any): Order => ({
   buyerAddress: o.buyer_address ?? null,
   createdAt: o.created_at,
   updatedAt: o.updated_at,
-  deliveryOtp: o.delivery_otp ?? null,
-  otpVerified: o.otp_verified ?? false,
 });
 
 export const getOrders = async (): Promise<Order[]> => {
@@ -277,53 +272,6 @@ export const updateOrderStatus = async (
     if (error) throw error;
     return true;
   } catch (e) { console.error('updateOrderStatus:', e); return false; }
-};
-
-// ── Delivery OTP ──────────────────────────────────────────────────────────────
-
-/** Generates a cryptographically random 6-digit OTP string */
-export const generateDeliveryOtp = (): string => {
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return String(arr[0] % 1000000).padStart(6, '0');
-};
-
-/** Stores the delivery OTP on an order row */
-export const storeDeliveryOtp = async (orderId: string, otp: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('orders')
-      .update({ delivery_otp: otp, otp_verified: false })
-      .eq('id', orderId);
-    if (error) throw error;
-    return true;
-  } catch (e) { console.error('storeDeliveryOtp:', e); return false; }
-};
-
-/** Verifies the OTP against the DB and marks as verified + delivered if correct */
-export const verifyDeliveryOtp = async (
-  orderId: string,
-  enteredOtp: string
-): Promise<'ok' | 'wrong' | 'error'> => {
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('delivery_otp, otp_verified')
-      .eq('id', orderId)
-      .single();
-    if (error) throw error;
-    if (!data?.delivery_otp) return 'error';
-    if (data.otp_verified) return 'ok'; // already done
-    if (data.delivery_otp !== enteredOtp) return 'wrong';
-
-    // Mark verified + delivered
-    const { error: updErr } = await supabase
-      .from('orders')
-      .update({ otp_verified: true, status: 'delivered' })
-      .eq('id', orderId);
-    if (updErr) throw updErr;
-    return 'ok';
-  } catch (e) { console.error('verifyDeliveryOtp:', e); return 'error'; }
 };
 
 // ── PIN ───────────────────────────────────────────────────────────────────────
