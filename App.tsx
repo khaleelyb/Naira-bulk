@@ -31,6 +31,7 @@ import { PinModal } from './components/PinModal';
 import { changeUserPassword } from './services/dbService';
 import { setUserPassword } from './services/dbService'; // add this line
 import { SellerOrdersPage } from './components/SellerOrdersPage';
+import { CATEGORIES, CART_CATEGORIES, SIZE_CATEGORIES } from './constants';
 
 // ── Admin usernames – add yours here ──────────────────────────────────────────
 const ADMIN_USERNAMES = ['admin', 'superadmin007gunfu', 'admin1', 'superadmin00700'];
