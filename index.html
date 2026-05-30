@@ -13,8 +13,10 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#16a34a" />
 
+    <!-- ── Viewport — zoom disabled ── -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
     <!-- ── SEO & Social ── -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NairaBulk – Buy &amp; Sell Nationwide in Nigeria</title>
     <meta name="description" content="Nigeria's bulk marketplace. Browse listings, message sellers, and shop securely with nationwide delivery." />
 
@@ -30,10 +32,13 @@
     <meta name="twitter:description" content="Buy and sell anything in Nigeria. Nationwide delivery." />
     <meta name="twitter:image" content="/icon-512.png" />
 
+    <!-- ── Tailwind ── -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = { darkMode: 'class' }
     </script>
+
+    <!-- ── Theme (prevent flash) ── -->
     <script>
       (function() {
         const theme = localStorage.getItem('kano-theme') || 'system';
@@ -44,6 +49,13 @@
         }
       })();
     </script>
+
+    <!-- ── Prevent double-tap zoom on iOS (extra safety) ── -->
+    <style>
+      * {
+        touch-action: manipulation;
+      }
+    </style>
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
     <div id="root"></div>
