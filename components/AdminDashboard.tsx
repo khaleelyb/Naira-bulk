@@ -579,7 +579,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="flex items-start gap-1">
                   
                     href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`}
-                    target="_blank" rel="noopener noreferrer"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     title="Search on Temu"
                     className="text-orange-500 hover:text-orange-600 flex-shrink-0 mt-0.5"
                     onClick={e => e.stopPropagation()}
