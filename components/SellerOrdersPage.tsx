@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { User, Product } from '../types';
 import type { Order } from '../services/dbService';
-import { verifyDeliveryOtp } from '../services/dbService';
 
 interface SellerOrdersPageProps {
   currentUser: User;
@@ -40,182 +39,10 @@ const formatDate = (iso: string) => {
   } catch { return iso; }
 };
 
-// ── OTP Entry Modal ───────────────────────────────────────────────────────────
-interface OtpModalProps {
-  order: Order;
-  /** Called with confirmed OTP — returns 'ok' | 'wrong' | 'error' */
-  onConfirm: (otp: string) => Promise<'ok' | 'wrong' | 'error'>;
-  onClose: () => void;
-}
-
-const OtpModal: React.FC<OtpModalProps> = ({ order, onConfirm, onClose }) => {
-  const [otp, setOtp] = useState('');
-  const [state, setState] = useState<'idle' | 'loading' | 'wrong' | 'error' | 'ok'>('idle');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.trim().length !== 6) return;
-    setState('loading');
-    const result = await onConfirm(otp.trim());
-    setState(result);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-sm">Confirm Delivery</h3>
-                <p className="text-xs text-gray-400 truncate max-w-[180px]">{order.productTitle}</p>
-              </div>
-            </div>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="px-6 py-5">
-          {state === 'ok' ? (
-            <div className="flex flex-col items-center py-4 gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-gray-900 dark:text-white">Delivery Confirmed!</p>
-                <p className="text-sm text-gray-400 mt-1">Order marked as delivered. Payment released.</p>
-              </div>
-              <button onClick={onClose} className="bg-green-500 hover:bg-green-600 text-white font-bold px-8 py-2.5 rounded-xl transition-colors text-sm">
-                Done
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                Ask the buyer for their 6-digit delivery code. Enter it below to confirm delivery.
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Buyer's Delivery Code
-                </label>
-                {/* OTP boxes */}
-                <div className="flex gap-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className={`flex-1 h-12 rounded-xl border-2 flex items-center justify-center transition-all ${
-                      state === 'wrong' || state === 'error'
-                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10'
-                        : otp.length > i
-                          ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10'
-                          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                    }`}>
-                      <span className={`text-lg font-bold ${
-                        state === 'wrong' || state === 'error' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
-                      }`}>
-                        {otp[i] ?? ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Hidden actual input */}
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={otp}
-                  onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setState('idle'); }}
-                  className="sr-only"
-                  autoFocus
-                  id="otp-input"
-                />
-                {/* Clickable label to focus hidden input */}
-                <label
-                  htmlFor="otp-input"
-                  className="block mt-2 text-center text-xs text-green-500 hover:text-green-600 cursor-pointer font-medium"
-                >
-                  Tap here to type code
-                </label>
-
-                {/* Visible number pad */}
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((k, i) => (
-                    k === '' ? <div key={i} /> : (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => {
-                          setState('idle');
-                          if (k === '⌫') { setOtp(p => p.slice(0, -1)); }
-                          else if (otp.length < 6) { setOtp(p => p + k); }
-                        }}
-                        className="h-12 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-lg font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all"
-                      >
-                        {k}
-                      </button>
-                    )
-                  ))}
-                </div>
-
-                {state === 'wrong' && (
-                  <div className="mt-2 flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40 rounded-xl px-3 py-2">
-                    <svg className="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                    </svg>
-                    <p className="text-xs text-red-600 dark:text-red-400">Incorrect code. Ask the buyer to check their Order History.</p>
-                  </div>
-                )}
-                {state === 'error' && (
-                  <p className="text-xs text-red-500 mt-2 text-center">Something went wrong. Please try again.</p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={otp.length !== 6 || state === 'loading'}
-                  className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold transition-colors shadow-md shadow-green-200 dark:shadow-green-900/30"
-                >
-                  {state === 'loading' ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Verifying…
-                    </span>
-                  ) : 'Confirm Delivery'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
   currentUser, orders, products, onBack, onUpdateOrderStatus,
 }) => {
   const [filter, setFilter] = useState<'all' | 'success' | 'shipped' | 'delivered' | 'pending' | 'failed'>('all');
-  const [otpModal, setOtpModal] = useState<Order | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const myOrders = useMemo(() =>
@@ -238,19 +65,6 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
       .filter(o => ['success', 'shipped', 'delivered'].includes(o.status))
       .reduce((s, o) => s + o.amount, 0),
   }), [myOrders]);
-
-  /**
-   * Called by OtpModal — verifies against Supabase DB.
-   * On 'ok', also updates local state via onUpdateOrderStatus.
-   */
-  const handleOtpConfirm = async (order: Order, enteredOtp: string): Promise<'ok' | 'wrong' | 'error'> => {
-    const result = await verifyDeliveryOtp(order.id, enteredOtp);
-    if (result === 'ok') {
-      // Update local orders state to reflect delivered + otpVerified
-      onUpdateOrderStatus(order.id, 'delivered');
-    }
-    return result;
-  };
 
   const FILTER_TABS = [
     { key: 'all', label: 'All' },
@@ -305,25 +119,6 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
           ))}
         </div>
 
-        {/* ── OTP delivery info banner ── */}
-        {stats.paid > 0 && (
-          <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-2xl px-4 py-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
-                {stats.paid} order{stats.paid !== 1 ? 's' : ''} ready to ship
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5 leading-relaxed">
-                When you deliver an order, tap <strong>"Confirm Delivery"</strong> and enter the 6-digit code the buyer received after payment. This verifies delivery and marks the order complete.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* ── Filter tabs ── */}
         <div className="flex gap-1 overflow-x-auto pb-1">
           {FILTER_TABS.map(t => (
@@ -360,13 +155,6 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
             {filtered.map(order => {
               const product = products.find(p => p.id === order.productId);
               const isExpanded = expandedId === order.id;
-              const isDelivered = order.status === 'delivered' || order.otpVerified;
-
-              // Show "Confirm Delivery" if order is paid or shipped and has an OTP that hasn't been verified
-              const canConfirmDelivery =
-                (order.status === 'success' || order.status === 'shipped') &&
-                order.deliveryOtp &&
-                !order.otpVerified;
 
               return (
                 <div key={order.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-green-200 dark:hover:border-green-800/50 transition-colors">
@@ -418,34 +206,11 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
                             </a>
                           )}
                         </div>
-
-                        {/* Delivered + OTP verified badge */}
-                        {isDelivered && order.otpVerified && (
-                          <div className="mt-2 inline-flex items-center gap-1 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                            </svg>
-                            Delivery code verified
-                          </div>
-                        )}
                       </div>
                     </div>
 
                     {/* Action row */}
                     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50 dark:border-gray-800 flex-wrap">
-
-                      {/* ── CONFIRM DELIVERY via OTP ── */}
-                      {canConfirmDelivery && (
-                        <button
-                          onClick={() => setOtpModal(order)}
-                          className="flex items-center gap-1.5 text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm shadow-green-200 dark:shadow-green-900/30"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                          </svg>
-                          Enter Delivery Code
-                        </button>
-                      )}
 
                       {/* Mark as shipped if paid */}
                       {order.status === 'success' && (
@@ -457,6 +222,19 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                           </svg>
                           Mark Shipped
+                        </button>
+                      )}
+
+                      {/* Mark as delivered if shipped */}
+                      {order.status === 'shipped' && (
+                        <button
+                          onClick={() => onUpdateOrderStatus(order.id, 'delivered')}
+                          className="flex items-center gap-1.5 text-xs font-bold bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                          </svg>
+                          Mark Delivered
                         </button>
                       )}
 
@@ -520,15 +298,6 @@ export const SellerOrdersPage: React.FC<SellerOrdersPageProps> = ({
           </div>
         )}
       </div>
-
-      {/* OTP Confirmation Modal */}
-      {otpModal && (
-        <OtpModal
-          order={otpModal}
-          onConfirm={(enteredOtp) => handleOtpConfirm(otpModal, enteredOtp)}
-          onClose={() => setOtpModal(null)}
-        />
-      )}
     </div>
   );
 };
