@@ -200,6 +200,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setConfirmDelete(null);
   };
 
+  const exportBuyersCSV = () => {
+  const rows = [
+    ['Order ID', 'Date', 'Product', 'Amount', 'Status', 'Buyer Name', 'Buyer Email', 'Buyer Phone', 'Buyer Address', 'Payment Ref'],
+    ...orders.map(o => [
+      o.id,
+      new Date(o.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' }),
+      o.productTitle,
+      o.amount,
+      STATUS_LABELS[o.status] ?? o.status,
+      o.buyerName ?? '',
+      o.buyerEmail ?? '',
+      o.buyerPhone ?? '',
+      o.buyerAddress ?? '',
+      o.korapayReference ?? '',
+    ])
+  ];
+
+  const csv = rows.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `buyers-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
   const NEXT_STATUS: Record<string, Order['status'] | null> = {
     success: 'shipped', shipped: 'delivered', delivered: null,
     pending: null, processing: null, failed: null,
@@ -541,6 +570,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {tab === 'orders' && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
+              <button
+  onClick={exportBuyersCSV}
+  className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 hover:border-green-400 hover:text-green-600 dark:hover:text-green-400 transition-colors whitespace-nowrap"
+>
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+  </svg>
+  Export CSV
+</button>
               <div className="flex-1 relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 <input type="text" placeholder="Search by product, buyer, or reference…" value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
