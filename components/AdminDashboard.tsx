@@ -572,7 +572,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div className="min-w-0 flex-1">
-                                <p className="font-bold text-gray-900 dark:text-white text-base leading-snug">{o.productTitle}</p>
+                                href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="font-bold text-gray-900 dark:text-white text-base leading-snug hover:text-blue-500 transition-colors"
+>
+  {o.productTitle}
+</a>
                                 {product && (
                                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                                     <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
