@@ -493,7 +493,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {orders.slice(0, 6).map(o => (
                       <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                         <td className="py-2.5 pr-3">
-                          <p className="font-medium text-gray-900 dark:text-white truncate max-w-[140px]"></p>
+                          <p className="font-medium text-gray-900 dark:text-white truncate max-w-[140px]">{o.productTitle}</p>
                           <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
                         </td>
                         <td className="py-2.5 hidden sm:table-cell text-gray-500 dark:text-gray-400 text-xs">{o.buyerName ?? '—'}</td>
