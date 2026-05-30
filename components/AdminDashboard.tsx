@@ -493,7 +493,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {orders.slice(0, 6).map(o => (
                       <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                         <td className="py-2.5 pr-3">
-                          <p className="font-medium text-gray-900 dark:text-white truncate max-w-[140px]">{o.productTitle}</p>
+                          <p className="font-medium text-gray-900 dark:text-white truncate max-w-[140px]"></p>
                           <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
                         </td>
                         <td className="py-2.5 hidden sm:table-cell text-gray-500 dark:text-gray-400 text-xs">{o.buyerName ?? '—'}</td>
@@ -572,13 +572,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 flex-wrap">
                               <div className="min-w-0 flex-1">
-                                href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="font-bold text-gray-900 dark:text-white text-base leading-snug hover:text-blue-500 transition-colors"
->
+                                <p className="font-bold text-gray-900 dark:text-white text-base leading-snug flex items-center gap-1.5">
+  
+    href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    title="Search on Temu"
+    className="flex-shrink-0 text-orange-500 hover:text-orange-600 transition-colors"
+  >
+    🔍
+  </a>
   {o.productTitle}
-</a>
+</p>
+     
                                 {product && (
                                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                                     <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
