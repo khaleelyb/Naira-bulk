@@ -513,202 +513,261 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* ══ ORDERS ════════════════════════════════════════════════════════════ */}
         {tab === 'orders' && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-                <input type="text" placeholder="Search by product, buyer, or reference…" value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
-              </div>
-              <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value)}
-                className="px-3 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400">
-                <option value="all">All Statuses</option>
-                <option value="success">Paid</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-
-            {orderStatusFilter === 'all' && pendingShipment.length > 0 && (
-              <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/40 rounded-xl px-4 py-3 flex items-center gap-3">
-                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                </svg>
-                <p className="text-sm text-green-700 dark:text-green-400 font-medium flex-1">
-                  <strong>{pendingShipment.length}</strong> paid order{pendingShipment.length !== 1 ? 's' : ''} waiting to be shipped.
-                </p>
-                <button onClick={() => setOrderStatusFilter('success')} className="text-xs font-bold text-green-600 hover:text-green-700 whitespace-nowrap">Filter →</button>
-              </div>
-            )}
-
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{filteredOrders.length} orders</span>
-                <span className="text-xs text-gray-400">Total: ₦{filteredOrders.reduce((s, o) => s + (o.status !== 'failed' ? o.amount : 0), 0).toLocaleString()}</span>
-              </div>
-              <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                {filteredOrders.map(o => {
-                  const buyer = users.find(u => u.id === o.buyerId);
-                  const seller = users.find(u => u.id === o.sellerId);
-                  const product = products.find(p => p.id === o.productId);
-                  const isExpanded = expandedOrderId === o.id;
-                  const nextStatus = NEXT_STATUS[o.status];
-                  return (
-                    <div key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                      <div className="px-5 py-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0">
-  {product?.images?.[0]
-    ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
-    : <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-300 dark:text-gray-600">
-        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
-        <span className="text-xs font-medium">No image</span>
+  <div className="space-y-3">
+    {/* Search + filter */}
+    <div className="flex gap-2">
+      <div className="flex-1 relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+        <input type="text" placeholder="Search by product, buyer, or reference…" value={orderSearch} onChange={e => setOrderSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
       </div>
-  }
-</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 flex-wrap">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-bold text-gray-900 dark:text-white text-base leading-snug flex items-center gap-1.5">
-                                  <a href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`} target="_blank" rel="noopener noreferrer" title="Search on Temu" className="flex-shrink-0 text-orange-500 hover:text-orange-600 transition-colors">🔍</a>
-                                  {o.productTitle}
-                                </p>
-     
-                                {product && (
-                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">{product.category}</span>
-                                    <span className="text-xs text-gray-400">#{o.id.slice(0, 8)}</span>
-                                  </div>
-                                )}
-                                <p className="text-xs text-gray-400 mt-1">{formatDate(o.createdAt)}</p>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <StatusBadge status={o.status} />
-                                <p className="font-bold text-green-600 dark:text-green-400 text-base">₦{o.amount.toLocaleString()}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 mt-2 flex-wrap">
-                              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
-                                <span>{o.buyerName ?? buyer?.name ?? 'Unknown buyer'}</span>
-                              </div>
-                              {o.buyerEmail && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg><a href={`mailto:${o.buyerEmail}`} className="hover:text-green-500 transition-colors">{o.buyerEmail}</a></div>}
-                              {o.buyerPhone && <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg><a href={`tel:${o.buyerPhone}`} className="hover:text-green-500 transition-colors">{o.buyerPhone}</a></div>}
-                              {o.buyerAddress && <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400"><svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg><span>{o.buyerAddress}</span></div>}
-                            </div>
-                            <div className="flex items-center gap-2 mt-3 flex-wrap">
-                              {nextStatus && (
-                                <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)} className="text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors shadow-sm">{NEXT_LABEL[o.status]}</button>
-                              )}
-                              <button onClick={() => setExpandedOrderId(isExpanded ? null : o.id)} className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">{isExpanded ? 'Hide details' : 'View details'}</button>
-                            </div>
-                          </div>
-                        </div>
-                        {isExpanded && (
-                          <div className="mt-4 ml-16 bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-2 text-xs">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Order ID</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.id}</p></div>
-                              {o.buyerPhone && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p><a href={`tel:${o.buyerPhone}`} className="text-green-500 hover:text-green-600 font-medium">{o.buyerPhone}</a></div>}
-                              {o.buyerAddress && <div className="sm:col-span-2"><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Delivery Address</p><p className="text-gray-600 dark:text-gray-300">{o.buyerAddress}</p></div>}
-                              {o.korapayReference && <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Payment Reference</p><p className="font-mono text-gray-600 dark:text-gray-300 break-all">{o.korapayReference}</p></div>}
-                              {seller && (
-  <div>
-    <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Seller</p>
-
-    <div className="flex items-center gap-2">
-      <img
-        src={seller.profilePicture}
-        alt={seller.name}
-        className="w-5 h-5 rounded-full object-cover"
-      />
-      <p className="text-gray-600 dark:text-gray-300">
-        {seller.name} (@{seller.username})
-      </p>
+      <select value={orderStatusFilter} onChange={e => setOrderStatusFilter(e.target.value)}
+        className="px-2 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 w-28">
+        <option value="all">All</option>
+        <option value="success">Paid</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+        <option value="pending">Pending</option>
+        <option value="processing">Processing</option>
+        <option value="failed">Failed</option>
+      </select>
     </div>
 
-    {seller.phone && (
-      <a
-        href={`tel:${seller.phone}`}
-        className="text-green-500 hover:text-green-600 text-xs font-medium mt-1 block"
-      >
-        📞 {seller.phone}
-      </a>
+    {/* Pending shipment banner */}
+    {orderStatusFilter === 'all' && pendingShipment.length > 0 && (
+      <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/40 rounded-xl px-4 py-3 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
+        onClick={() => setOrderStatusFilter('success')}>
+        <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        <p className="text-sm text-green-700 dark:text-green-400 font-medium flex-1">
+          <strong>{pendingShipment.length}</strong> paid order{pendingShipment.length !== 1 ? 's' : ''} waiting to be shipped.
+        </p>
+        <button className="text-xs font-bold text-green-600 hover:text-green-700 whitespace-nowrap">Filter →</button>
+      </div>
     )}
+
+    {/* Summary */}
+    <div className="flex items-center justify-between px-1">
+      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{filteredOrders.length} orders</span>
+      <span className="text-xs text-gray-400">Total: ₦{filteredOrders.reduce((s, o) => s + (o.status !== 'failed' ? o.amount : 0), 0).toLocaleString()}</span>
+    </div>
+
+    {/* Order cards */}
+    <div className="space-y-3">
+      {filteredOrders.map(o => {
+        const buyer = users.find(u => u.id === o.buyerId);
+        const seller = users.find(u => u.id === o.sellerId);
+        const product = products.find(p => p.id === o.productId);
+        const isExpanded = expandedOrderId === o.id;
+        const nextStatus = NEXT_STATUS[o.status];
+
+        return (
+          <div key={o.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+
+            {/* ── Header: thumb + title + badge + amount ── */}
+            <div className="flex items-start gap-3 p-3">
+              <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0">
+                {product?.images?.[0]
+                  ? <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                    </div>
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-1">
+                  
+                    href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(o.productTitle)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    title="Search on Temu"
+                    className="text-orange-500 hover:text-orange-600 flex-shrink-0 mt-0.5"
+                    onClick={e => e.stopPropagation()}
+                  >🔍</a>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white leading-snug line-clamp-2">{o.productTitle}</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">{formatDate(o.createdAt)} · #{o.id.slice(0, 8)}</p>
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <StatusBadge status={o.status} />
+                  {product && (
+                    <span className="text-xs bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">{product.category}</span>
+                  )}
+                </div>
+              </div>
+              <p className="font-bold text-green-600 dark:text-green-400 text-base flex-shrink-0 ml-1">
+                ₦{o.amount.toLocaleString()}
+              </p>
+            </div>
+
+            {/* ── Buyer info grid ── */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+              {(o.buyerName || buyer?.name) && (
+                <div className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300 col-span-2">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                  <span className="font-medium truncate">{o.buyerName ?? buyer?.name}</span>
+                </div>
+              )}
+              {o.buyerPhone && (
+                <a href={`tel:${o.buyerPhone}`} className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:underline truncate">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                  <span className="truncate">{o.buyerPhone}</span>
+                </a>
+              )}
+              {o.buyerEmail && (
+                <a href={`mailto:${o.buyerEmail}`} className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-green-500 truncate">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+                  <span className="truncate">{o.buyerEmail}</span>
+                </a>
+              )}
+              {o.buyerAddress && (
+                <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400 col-span-2">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                  <span>{o.buyerAddress}</span>
+                </div>
+              )}
+            </div>
+
+            {/* ── Actions row ── */}
+            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100 dark:border-gray-800">
+              {nextStatus && (
+                <button onClick={() => onUpdateOrderStatus(o.id, nextStatus)}
+                  className="flex-1 text-xs font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-xl transition-colors shadow-sm">
+                  {NEXT_LABEL[o.status]}
+                </button>
+              )}
+              <button onClick={() => setExpandedOrderId(isExpanded ? null : o.id)}
+                className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap">
+                {isExpanded ? 'Hide' : 'Details'}
+              </button>
+              {seller?.phone && (
+                <button
+                  onClick={() => {
+                    const phone = seller.phone!.replace(/^0/, '234').replace(/\D/g, '');
+                    const text = [
+                      `Hello ${seller.name},`, ``,
+                      `📦 New Order Details`,
+                      `Product: ${o.productTitle}`,
+                      o.productId ? `🆔 Product ID: ${o.productId}` : '',
+                      `Amount: ₦${o.amount.toLocaleString()}`,
+                      `Status: ${STATUS_LABELS[o.status]}`, ``,
+                      `👤 Buyer: ${o.buyerName ?? '—'}`,
+                      o.buyerPhone ? `📞 Buyer Phone: ${o.buyerPhone}` : '',
+                      o.buyerAddress ? `📍 Address: ${o.buyerAddress}` : '', ``,
+                      o.korapayReference ? `💳 Payment Ref: ${o.korapayReference}` : '',
+                    ].filter(Boolean).join('\n');
+                    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-green-100 transition-colors flex-shrink-0"
+                  title="WhatsApp seller"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* ── Expanded details ── */}
+            {isExpanded && (
+              <div className="px-3 pb-3 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5">
+                    <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Order ID</p>
+                    <p className="font-mono text-gray-600 dark:text-gray-300 break-all text-[11px]">{o.id}</p>
+                  </div>
+                  {o.buyerPhone && (
+                    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5">
+                      <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Buyer Phone</p>
+                      <a href={`tel:${o.buyerPhone}`} className="text-green-500 hover:text-green-600 font-medium">{o.buyerPhone}</a>
+                    </div>
+                  )}
+                  {o.buyerAddress && (
+                    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5 col-span-2">
+                      <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Delivery Address</p>
+                      <p className="text-gray-600 dark:text-gray-300">{o.buyerAddress}</p>
+                    </div>
+                  )}
+                  {o.korapayReference && (
+                    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5 col-span-2">
+                      <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Payment Reference</p>
+                      <p className="font-mono text-gray-600 dark:text-gray-300 break-all text-[11px]">{o.korapayReference}</p>
+                    </div>
+                  )}
+                  {seller && (
+                    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5 col-span-2">
+                      <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1.5">Seller</p>
+                      <div className="flex items-center gap-2">
+                        <img src={seller.profilePicture} alt={seller.name} className="w-5 h-5 rounded-full object-cover" />
+                        <p className="text-gray-600 dark:text-gray-300">{seller.name} (@{seller.username})</p>
+                      </div>
+                      {seller.phone && (
+                        <a href={`tel:${seller.phone}`} className="text-green-500 hover:text-green-600 text-xs font-medium mt-1.5 block">
+                          📞 {seller.phone}
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5">
+                    <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Amount</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-bold">₦{o.amount.toLocaleString()} {o.currency}</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5">
+                    <p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Last Updated</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-[11px]">{formatDate(o.updatedAt)}</p>
+                  </div>
+                </div>
+
+                {/* WhatsApp seller — full button in expanded too */}
+                <button
+                  onClick={() => {
+                    if (!seller?.phone) { alert('Seller phone not available'); return; }
+                    const phone = seller.phone.replace(/^0/, '234').replace(/\D/g, '');
+                    const text = [
+                      `Hello ${seller.name},`, ``,
+                      `📦 New Order Details`,
+                      `Product: ${o.productTitle}`,
+                      o.productId ? `🆔 Product ID: ${o.productId}` : '',
+                      `Amount: ₦${o.amount.toLocaleString()}`,
+                      `Status: ${STATUS_LABELS[o.status]}`, ``,
+                      `👤 Buyer: ${o.buyerName ?? '—'}`,
+                      o.buyerPhone ? `📞 Buyer Phone: ${o.buyerPhone}` : '',
+                      o.buyerAddress ? `📍 Address: ${o.buyerAddress}` : '', ``,
+                      o.korapayReference ? `💳 Payment Ref: ${o.korapayReference}` : '',
+                    ].filter(Boolean).join('\n');
+                    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                  }}
+                  className="w-full text-xs font-bold bg-green-600 text-white px-3 py-2.5 rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  💬 Send to WhatsApp Seller
+                </button>
+
+                {/* Manual status update */}
+                <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-2.5">
+                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-2">Update Status Manually</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['pending','processing','success','shipped','delivered','failed'] as Order['status'][]).map(s => (
+                      <button key={s} disabled={o.status === s} onClick={() => onUpdateOrderStatus(o.id, s)}
+                        className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-300 hover:text-green-500'}`}>
+                        {STATUS_LABELS[s]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {filteredOrders.length === 0 && (
+        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <svg className="w-10 h-10 mx-auto mb-3 text-gray-200 dark:text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+          <p className="text-gray-400 text-sm">No orders found</p>
+        </div>
+      )}
+    </div>
   </div>
 )}
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Amount</p><p className="text-gray-600 dark:text-gray-300 font-bold">₦{o.amount.toLocaleString()} {o.currency}</p></div>
-                              <div><p className="text-gray-400 font-semibold uppercase tracking-wide mb-1">Last Updated</p><p className="text-gray-600 dark:text-gray-300">{formatDate(o.updatedAt)}</p></div>
-                            </div>
-                          
-
-
-{/* 👇 REPLACE COPY BUTTON WITH THIS */}
-<button
-  onClick={() => {
-    if (!seller?.phone) {
-      alert('Seller phone not available');
-      return;
-    }
-
-    const phone = seller.phone.replace(/^0/, '234').replace(/\D/g, '');
-
-    const text = [
-      `Hello ${seller.name},`,
-      ``,
-      `📦 New Order Details`,
-      `Product: ${o.productTitle}`,
-      o.productId ? `🆔 Product ID: ${o.productId}` : '',
-      `Amount: ₦${o.amount.toLocaleString()}`,
-      `Status: ${STATUS_LABELS[o.status]}`,
-      ``,
-      `👤 Buyer: ${o.buyerName ?? '—'}`,
-      o.buyerPhone ? `📞 Buyer Phone: ${o.buyerPhone}` : '',
-      o.buyerAddress ? `📍 Address: ${o.buyerAddress}` : '',
-      ``,
-      o.korapayReference ? `💳 Payment Ref: ${o.korapayReference}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-
-    window.open(url, '_blank');
-  }}
-  className="mt-3 w-full sm:w-auto text-xs font-bold bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors"
->
-  💬 Send to WhatsApp Seller
-</button>
-
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                              <p className="text-gray-400 font-semibold uppercase tracking-wide mb-2">Update Status Manually</p>
-                              <div className="flex flex-wrap gap-2">
-                                {(['pending','processing','success','shipped','delivered','failed'] as Order['status'][]).map(s => (
-                                  <button key={s} disabled={o.status === s} onClick={() => onUpdateOrderStatus(o.id, s)}
-                                    className={`px-2.5 py-1 rounded-lg font-semibold transition-colors text-xs ${o.status === s ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-default' : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-300 hover:text-green-500'}`}>
-                                    {STATUS_LABELS[s]}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {filteredOrders.length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-200 dark:text-gray-700" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.875-7.16a60.077 60.077 0 0 0-16.836-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                    No orders found
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ══ PRODUCTS ══════════════════════════════════════════════════════════ */}
         {tab === 'products' && (
