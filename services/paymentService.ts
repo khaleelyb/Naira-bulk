@@ -1,5 +1,4 @@
 import { supabase } from './supabase_client';
-import { generateDeliveryOtp, storeDeliveryOtp } from './dbService';
 
 export interface InitiatePaymentParams {
   productId: string;
@@ -37,7 +36,6 @@ export interface PaymentVerifyResult {
   status: string;
   transactionRef?: string;
   orderId?: string;
-  deliveryOtp?: string;
 }
 
 export const initiatePayment = async (
@@ -87,15 +85,6 @@ export const verifyPayment = async (
       body: { reference },
     });
     if (error) { console.error('verifyPayment error:', error); return null; }
-
-    const result = data as PaymentVerifyResult;
-
-    if (result?.status === 'success' && result.orderId) {
-      const otp = generateDeliveryOtp();
-      const stored = await storeDeliveryOtp(result.orderId, otp);
-      if (stored) result.deliveryOtp = otp;
-    }
-
-    return result;
+    return data as PaymentVerifyResult;
   } catch (err) { console.error('verifyPayment unexpected error:', err); return null; }
 };
