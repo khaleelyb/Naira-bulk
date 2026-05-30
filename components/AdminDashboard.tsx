@@ -108,6 +108,18 @@ const formatDate = (iso: string) => {
     return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   } catch { return iso; }
 };
+const daysSince = (iso: string): number => {
+  try {
+    return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+  } catch { return 0; }
+};
+
+const urgencyLabel = (days: number, status: string): { text: string; cls: string } | null => {
+  if (status === 'delivered') return null;
+  if (days >= 7) return { text: `${days}d — follow up!`, cls: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' };
+  if (days >= 3) return { text: `${days}d ago`, cls: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800' };
+  return { text: `${days}d ago`, cls: 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700' };
+};
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   products, users, orders, currentUser,
@@ -494,7 +506,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                         <td className="py-2.5 pr-3">
                           <p className="font-medium text-gray-900 dark:text-white truncate max-w-[140px]">{o.productTitle}</p>
-                          <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+  <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
+  {(() => {
+    const days = daysSince(o.createdAt);
+    const badge = urgencyLabel(days, o.status);
+    return badge ? (
+      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${badge.cls}`}>
+        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        {badge.text}
+      </span>
+    ) : null;
+  })()}
+</div>
                         </td>
                         <td className="py-2.5 hidden sm:table-cell text-gray-500 dark:text-gray-400 text-xs">{o.buyerName ?? '—'}</td>
                         <td className="py-2.5 text-right font-semibold text-green-600 dark:text-green-400">₦{o.amount.toLocaleString()}</td>
