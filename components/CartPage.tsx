@@ -115,6 +115,22 @@ const BuyerForm: React.FC<BuyerFormProps> = ({ currentUser, onSubmit, isLoading 
   );
 };
 
+const loadPaystackScript = (): Promise<void> => {
+  return new Promise((resolve) => {
+    if (window.PaystackPop) { resolve(); return; }
+    const existing = document.querySelector('script[src*="paystack"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.async = true;
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+};
+
 // ── Main CartPage ─────────────────────────────────────────────────────────────
 export const CartPage: React.FC<CartPageProps> = ({
   cartItems, onUpdateQuantity, onRemoveItem, onCheckout,
@@ -200,67 +216,69 @@ export const CartPage: React.FC<CartPageProps> = ({
   };
 
   // ── Pay all: step 2 — process each seller group ───────────────────────────
-  const processGroup = async (
-    group: SellerGroup,
-    details: { name: string; email: string; phone: string; address: string },
-    onDone: () => void,
-    onFail: () => void,
-  ) => {
-    if (!currentUser) return;
-
-    const result = await initiateCartPayment({
-      sellerId: group.sellerId,
-      items: group.items.map(i => ({
-        productId: i.product.id,
-        productTitle: i.selectedSize
-          ? `${i.product.title} (Size ${i.selectedSize})`
-          : i.product.title,
-        quantity: i.quantity,
-        unitPrice: i.product.price,
-      })),
-      totalAmount: group.total,
-      buyerId: currentUser.id,
-      buyerName: details.name,
-      buyerEmail: details.email,
-      buyerPhone: details.phone,
-      buyerAddress: details.address,
-    });
-
-    if (!result) { onFail(); return; }
-
-    let attempts = 0;
-    while (!window.PaystackPop && attempts < 20) {
-      await new Promise(r => setTimeout(r, 150));
-      attempts++;
-    }
-    if (!window.PaystackPop) { onFail(); return; }
-
-    const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: details.email,
-      amount: result.amount * 100,
-      currency: 'NGN',
-      ref: result.reference,
-      metadata: {
-        custom_fields: [
-          { display_name: 'Buyer', variable_name: 'buyer', value: details.name },
-          { display_name: 'Phone', variable_name: 'phone', value: details.phone },
-          { display_name: 'Address', variable_name: 'address', value: details.address },
-        ],
-      },
-      onClose: () => { onFail(); },
-      callback: async (response: { reference: string }) => {
-        const v = await verifyPayment(response.reference);
+const processGroup = async (
+  group: SellerGroup,
+  details: { name: string; email: string; phone: string; address: string },
+  onDone: () => void,
+  onFail: () => void,
+) => {
+  if (!currentUser) return;
+ 
+  const result = await initiateCartPayment({
+    sellerId: group.sellerId,
+    items: group.items.map(i => ({
+      productId:    i.product.id,
+      productTitle: i.selectedSize
+        ? `${i.product.title} (Size ${i.selectedSize})`
+        : i.product.title,
+      quantity:  i.quantity,
+      unitPrice: i.product.price,
+    })),
+    totalAmount:  group.total,
+    buyerId:      currentUser.id,
+    buyerName:    details.name,
+    buyerEmail:   details.email,
+    buyerPhone:   details.phone,
+    buyerAddress: details.address,
+  });
+ 
+  if (!result) { onFail(); return; }
+ 
+  // Wait for Paystack script
+  await loadPaystackScript();
+ 
+  if (!window.PaystackPop) { onFail(); return; }
+ 
+  const handler = window.PaystackPop.setup({
+    key:      PAYSTACK_PUBLIC_KEY,
+    email:    details.email,
+    amount:   result.amount * 100,   // kobo
+    currency: 'NGN',
+    ref:      result.reference,
+    metadata: {
+      custom_fields: [
+        { display_name: 'Buyer',   variable_name: 'buyer',   value: details.name },
+        { display_name: 'Phone',   variable_name: 'phone',   value: details.phone },
+        { display_name: 'Address', variable_name: 'address', value: details.address },
+      ],
+    },
+    // Plain function expressions — Paystack validates typeof callback === 'function'
+    onClose: function () {
+      onFail();
+    },
+    callback: function (response: { reference: string }) {
+      verifyPayment(response.reference).then((v) => {
         if (v?.status === 'success') {
           onDone();
         } else {
           onFail();
         }
-      },
-    });
-
-    handler.openIframe();
-  };
+      });
+    },
+  });
+ 
+  handler.openIframe();
+};
 
   const handleBuyerFormSubmit = async (details: { name: string; email: string; phone: string; address: string }) => {
     setBuyerDetails(details);
