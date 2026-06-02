@@ -99,6 +99,18 @@ const App: React.FC = () => {
       showToast('Error loading data. Please refresh.');
     } finally {
       setIsLoading(false);
+      // After setIsLoading(false), check for import params
+const url = new URL(window.location.href);
+const importParam = url.searchParams.get('import');
+if (importParam) {
+  try {
+    const decoded = JSON.parse(atob(importParam));
+    // Pre-fill the add product modal
+    setImportedProductData(decoded);
+    url.searchParams.delete('import');
+    window.history.replaceState({}, '', url.toString());
+  } catch {}
+}
     }
   };
   load();
