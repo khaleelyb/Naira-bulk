@@ -9,7 +9,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Women shoes': '👠',
   'Cars': '🚗',
   'Herbals and supplements': '🌿',
-  'Houses': '🏠',
   'Accesories and chargers': '🔌',
   'Food stuffs': '🛒',
   'Home, Furniture & Appliances': '🛋️',
@@ -21,18 +20,11 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Beauty & Personal Care': '💄',
   'Health & Medicine': '💊',
   'Vehicles': '🚙',
-  'Property': '🏢',
   'Food, Agriculture & Farming': '🌾',
-  'Services': '🛠️',
-  'Repair & Construction': '🏗️',
-  'Commercial Equipment & Tools': '⚙️',
   'Babies & Kids': '👶',
   'Animals & Pets': '🐾',
-  'Jobs': '💼',
   'Watches and jewelries': '💍',
-  'Order Food': '🍔',
   'Games and Toys': '🎮',
-  'Grocery': '🥦',
 };
 
 interface CategoryFilterProps {
