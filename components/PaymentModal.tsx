@@ -24,6 +24,9 @@ interface PaymentModalProps {
 
 type Step = 'form' | 'processing' | 'success' | 'failed';
 
+// ── Delivery states currently supported ─────────────────────────────────────
+const DELIVERY_STATES = ['Lagos', 'Abuja (FCT)', 'Kano', 'Kaduna'];
+
 // Load Paystack script once globally
 const loadPaystackScript = (): Promise<void> => {
   return new Promise((resolve) => {
@@ -48,6 +51,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [name, setName]       = useState(currentUser.name ?? '');
   const [phone, setPhone]     = useState(currentUser.phone ?? '');
   const [email, setEmail]     = useState(currentUser.email ?? '');
+  const [state, setState]     = useState('');
   const [address, setAddress] = useState(currentUser.address ?? '');
   const [errorMsg, setErrorMsg] = useState('');
   const [successRef, setSuccessRef] = useState('');
@@ -69,6 +73,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         setStep('form');
         setErrorMsg('');
         setEmail(currentUser.email ?? '');
+        setState('');
         setAddress(currentUser.address ?? '');
         setName(currentUser.name ?? '');
         setPhone(currentUser.phone ?? '');
@@ -83,10 +88,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!name.trim())                         { setErrorMsg('Please enter your full name.'); return; }
     if (!phone.trim() || phone.trim().length < 7) { setErrorMsg('Please enter a valid phone number.'); return; }
     if (!email.trim() || !email.includes('@')) { setErrorMsg('Please enter a valid email address.'); return; }
+    if (!state)                               { setErrorMsg('Please select your delivery state.'); return; }
     if (!address.trim())                      { setErrorMsg('Please enter your delivery address.'); return; }
 
     setStep('processing');
     setErrorMsg('');
+
+    const fullAddress = `${state} — ${address.trim()}`;
 
     const result = await initiatePayment({
       productId:    product.id,
@@ -96,7 +104,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       buyerName:    name.trim(),
       buyerEmail:   email.trim(),
       buyerPhone:   phone.trim(),
-      buyerAddress: address.trim(),
+      buyerAddress: fullAddress,
     });
 
     if (!result) {
@@ -118,7 +126,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     const capturedEmail   = email.trim();
     const capturedName    = name.trim();
     const capturedPhone   = phone.trim();
-    const capturedAddress = address.trim();
+    const capturedAddress = fullAddress;
 
     const handler = window.PaystackPop.setup({
       key:      PAYSTACK_PUBLIC_KEY,
@@ -208,6 +216,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   />
                 </div>
               ))}
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Delivery State
+                </label>
+                <select
+                  value={state}
+                  onChange={e => { setState(e.target.value); setErrorMsg(''); }}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all"
+                  required
+                >
+                  <option value="">Select a state…</option>
+                  {DELIVERY_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">We currently only deliver to Lagos, Abuja, Kano & Kaduna.</p>
+              </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
