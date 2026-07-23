@@ -61,6 +61,9 @@ interface CartPageProps {
   onCartCheckoutSuccess?: () => void;
 }
 
+// ── Delivery states currently supported ─────────────────────────────────────
+const DELIVERY_STATES = ['Lagos', 'Abuja (FCT)', 'Kano', 'Kaduna'];
+
 // ── Buyer details form ────────────────────────────────────────────────────────
 interface BuyerFormProps {
   currentUser: User;
@@ -68,20 +71,22 @@ interface BuyerFormProps {
   isLoading: boolean;
 }
 const BuyerForm: React.FC<BuyerFormProps> = ({ currentUser, onSubmit, isLoading }) => {
-  const [name, setName]       = useState(currentUser.name ?? '');
-  const [email, setEmail]     = useState(currentUser.email ?? '');
-  const [phone, setPhone]     = useState(currentUser.phone ?? '');
-  const [address, setAddress] = useState(currentUser.address ?? '');
-  const [err, setErr]         = useState('');
+  const [name, setName]         = useState(currentUser.name ?? '');
+  const [email, setEmail]       = useState(currentUser.email ?? '');
+  const [phone, setPhone]       = useState(currentUser.phone ?? '');
+  const [state, setState]       = useState('');
+  const [address, setAddress]   = useState(currentUser.address ?? '');
+  const [err, setErr]           = useState('');
 
   const handle = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim())                          { setErr('Please enter your name.'); return; }
     if (!phone.trim() || phone.length < 7)     { setErr('Please enter a valid phone number.'); return; }
     if (!email.trim() || !email.includes('@')) { setErr('Please enter a valid email.'); return; }
+    if (!state)                                 { setErr('Please select your delivery state.'); return; }
     if (!address.trim())                       { setErr('Please enter your delivery address.'); return; }
     setErr('');
-    onSubmit({ name, email, phone, address });
+    onSubmit({ name, email, phone, address: `${state} — ${address.trim()}` });
   };
 
   return (
@@ -99,6 +104,15 @@ const BuyerForm: React.FC<BuyerFormProps> = ({ currentUser, onSubmit, isLoading 
           />
         </div>
       ))}
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Delivery State</label>
+        <select value={state} onChange={e => { setState(e.target.value); setErr(''); }}
+          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all">
+          <option value="">Select a state…</option>
+          {DELIVERY_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <p className="text-[11px] text-gray-400 mt-1">We currently only deliver to Lagos, Abuja, Kano & Kaduna.</p>
+      </div>
       <div>
         <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Delivery Address</label>
         <textarea value={address} onChange={e => { setAddress(e.target.value); setErr(''); }}
