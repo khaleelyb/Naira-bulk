@@ -8,9 +8,7 @@ export const CATEGORIES = [
   'Watches and jewelries',
   'Cars',
   'Herbals and supplements',
-  'Houses',
   'Accesories and chargers',
-  'Order Food',
   'Games and Toys',
   'Body care, soaps and perfumes',
   'Electronics',
@@ -20,15 +18,9 @@ export const CATEGORIES = [
   'Beauty & Personal Care',
   'Health & Medicine',
   'Vehicles',
-  'Property',
-  'Grocery',
   'Home, Furniture & Appliances',
-  'Services',
-  'Repair & Construction',
-  'Commercial Equipment & Tools',
   'Babies & Kids',
   'Animals & Pets',
-  'Jobs'
 ];
 
 // Only these categories support Add to Cart
@@ -39,8 +31,6 @@ export const CART_CATEGORIES = new Set([
   'Health & Medicine',
   'Body care, soaps and perfumes',
   'Food, Agriculture & Farming',
-  'Grocery',
-  'Order Food',
 ]);
 
 // Size options for clothing and shoe categories
